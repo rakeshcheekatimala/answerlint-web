@@ -65,7 +65,7 @@ export function SiteHeaderClient({
           >
             <Link
               href="/#top"
-              className="flex items-center rounded-xl bg-white px-3 py-2 shadow-[0_10px_28px_rgba(0,0,0,0.18)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              className="flex h-[52px] items-center rounded-xl border border-slate-200/10 bg-slate-950/35 px-2.5 py-1.5 shadow-[0_8px_18px_rgba(0,0,0,0.12)] backdrop-blur-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
               <Image
                 src={logo.src}
@@ -73,7 +73,7 @@ export function SiteHeaderClient({
                 width={logo.width}
                 height={logo.height}
                 priority
-                className={`${scrolled ? "h-9" : "h-10"} w-auto transition-all duration-300`}
+                className={`${scrolled ? "h-8" : "h-9"} w-auto max-w-[9.5rem] object-contain transition-all duration-300 sm:max-w-[11.5rem]`}
               />
             </Link>
 

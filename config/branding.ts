@@ -6,9 +6,9 @@ export const branding = {
   /** Display name for marketing copy (can differ from npm package name). */
   displayName: "CiteOps",
   logo: {
-    src: process.env.NEXT_PUBLIC_LOGO_SRC ?? "/brand/logo.svg",
-    width: 132,
-    height: 36,
+    src: process.env.NEXT_PUBLIC_LOGO_SRC ?? "/brand/logo.png",
+    width: 1600,
+    height: 360,
   },
   links: {
     github:
