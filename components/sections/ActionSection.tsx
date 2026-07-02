@@ -12,12 +12,28 @@ export async function ActionSection() {
       className="scroll-mt-24 border-b border-border bg-wash py-16 sm:py-24"
     >
       <div className="safe-pad mx-auto max-w-content sm:px-6 lg:px-8">
-        <h2 className="font-display text-2xl font-semibold tracking-tight text-ink sm:text-4xl">
-          {t("title")}
-        </h2>
-        <p className="mt-4 max-w-2xl text-base text-ink-muted sm:text-lg">{t("subtitle")}</p>
-        <div className="mt-10 grid gap-6 lg:grid-cols-2 lg:items-start lg:gap-10">
-          <div className="min-w-0 overflow-hidden rounded-xl border border-border bg-ink shadow-soft">
+        <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-accent">
+              Ship workflow
+            </p>
+            <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight text-ink sm:text-5xl">
+              {t("title")}
+            </h2>
+          </div>
+          <p className="max-w-2xl text-base leading-8 text-ink-muted sm:text-lg">{t("subtitle")}</p>
+        </div>
+
+        <div className="mt-10 grid gap-6 lg:grid-cols-2 lg:items-stretch lg:gap-8">
+          <div className="min-w-0 overflow-hidden border border-border bg-[#0b1210] shadow-soft">
+            <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
+              <span className="h-2.5 w-2.5 rounded-full bg-[#ff6b65]" />
+              <span className="h-2.5 w-2.5 rounded-full bg-[#f4c358]" />
+              <span className="h-2.5 w-2.5 rounded-full bg-accent" />
+              <span className="ml-2 text-xs font-semibold uppercase tracking-[0.18em] text-white/70">
+                citeops overview
+              </span>
+            </div>
             <Image
               src={branding.overviewImageUrl}
               alt={t("imageAlt")}
@@ -27,26 +43,26 @@ export async function ActionSection() {
               sizes="(max-width: 768px) calc(100vw - 2rem), (max-width: 1024px) calc(100vw - 3rem), 50vw"
             />
           </div>
-          <div className="min-w-0">
-            <div className="min-w-0 rounded-[24px] border border-border bg-card p-5 shadow-soft sm:p-6">
-              <p className="text-xs font-medium uppercase tracking-wide text-ink-subtle">
+          <div className="min-w-0 border border-border bg-card shadow-soft">
+            <div className="border-b border-border p-5 sm:p-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-subtle">
                 {t("codeCaption")}
               </p>
-              <pre className="mt-3 max-w-full overflow-x-auto rounded-xl border border-border bg-paper-muted p-4 text-sm leading-relaxed text-ink">
+              <pre className="mt-4 max-w-full overflow-x-auto border border-border bg-[#0b1210] p-4 text-sm leading-relaxed text-emerald-100">
                 <code className="block w-max min-w-full whitespace-pre">
                   {t("codeBlock")}
                 </code>
               </pre>
-              <div className="mt-5 space-y-3">
-                {[t("detail1"), t("detail2"), t("detail3")].map((item) => (
-                  <p
-                    key={item}
-                    className="rounded-2xl bg-paper-muted px-4 py-3 text-sm leading-7 text-ink-muted"
-                  >
-                    {item}
-                  </p>
-                ))}
-              </div>
+            </div>
+            <div className="grid gap-px bg-border">
+              {[t("detail1"), t("detail2"), t("detail3")].map((item) => (
+                <p
+                  key={item}
+                  className="bg-card px-5 py-4 text-sm leading-7 text-ink-muted sm:px-6"
+                >
+                  {item}
+                </p>
+              ))}
             </div>
           </div>
         </div>

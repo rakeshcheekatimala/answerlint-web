@@ -10,18 +10,18 @@ export async function ExplainerSection() {
   return (
     <section className="border-b border-border bg-paper py-14 sm:py-20">
       <div className="safe-pad mx-auto max-w-content sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-3xl text-center">
+        <div className="max-w-3xl">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-accent">
             {t("eyebrow")}
           </p>
-          <h2 className="mt-4 font-display text-2xl font-semibold tracking-tight text-ink sm:text-4xl">
+          <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight text-ink sm:text-5xl">
             {t("title")}
           </h2>
          
         </div>
 
-        <div className="mt-10 rounded-[32px] border border-border bg-card p-4 shadow-soft sm:p-6">
-          <div className="overflow-hidden rounded-[28px] border border-border bg-paper-muted">
+        <div className="mt-10 border border-border bg-card p-3 shadow-soft sm:p-4">
+          <div className="overflow-hidden border border-border bg-paper-muted">
             <a
               href={branding.explainerImageUrl}
               target="_blank"
@@ -43,7 +43,7 @@ export async function ExplainerSection() {
         </div>
 
 
-        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <a
             href={branding.explainerImageUrl}
             target="_blank"
