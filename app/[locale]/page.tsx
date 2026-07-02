@@ -151,21 +151,21 @@ export default async function HomePage({ params }: Props) {
       <SiteHeader />
       <main id="main-content">
         <Hero />
-        <AuthorSection />
-        <ExplainerSection />
         <StatsStrip />
+        <ProductSection />
+        <ReportSection />
+        <ActionSection />
         <WhySection />
-        <AudienceSection />
-        <EducationSection />
         <HowSection />
         <WorkflowSection />
         <ComparisonSection />
-        <ReportSection />
-        <ProductSection />
-        <ActionSection />
+        <EducationSection />
+        <ExplainerSection />
+        <AudienceSection />
         <CompatibilitySection />
         <FaqSection />
         <ReviewsSection locale={locale} />
+        <AuthorSection />
         <CtaSection />
       </main>
       <SiteFooter />

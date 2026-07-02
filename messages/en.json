@@ -1,7 +1,7 @@
 {
   "Metadata": {
-    "title": "CiteOps — AEO & GEO audits for the answer-engine era",
-    "description": "Free CLI for Node.js. Score pages for answer-ready content (AEO) and AI trust (GEO). Print HTML, JSON, or CSV. Fail CI when scores slip."
+    "title": "CiteOps — Enterprise AEO & GEO audits for AI visibility",
+    "description": "llm-citeops scores pages for answer readiness, citation trust, and release risk. Run AEO and GEO audits from the CLI, playground, or CI."
   },
   "branding": {
     "logoAlt": "CiteOps wordmark"
@@ -20,21 +20,21 @@
     "npm": "npm"
   },
   "Hero": {
-    "eyebrow": "Open source · CLI · AI visibility",
-    "title": "See if your pages can rank in search and get cited in AI answers.",
-    "subtitle": "CiteOps runs AEO and GEO checks. You get one score, a short summary, and fixes devs can ship. The package is llm-citeops on npm and GitHub.",
-    "questionsLead": "What should you check before launch? Check answer fit, trust cues, and cite odds. Why use CI? Each release can meet the same bar. That bar covers search and AI chats.",
-    "businessLead": "One report for leaders and builders. It shows what changed, what matters, and what to fix next.",
-    "ctaPlayground": "Free analysis",
+    "eyebrow": "Open-source AI visibility control",
+    "title": "Audit the signals that decide whether AI cites you or skips you.",
+    "subtitle": "CiteOps turns AEO, GEO, trust, freshness, and citation readiness into a scored report your growth, content, and engineering teams can act on before release.",
+    "questionsLead": "Know which launch pages answer the buyer question, which signals are missing, and where competitors are easier for AI systems to quote.",
+    "businessLead": "The npm package llm-citeops gives every page the same inspection path: score, evidence, priority fixes, and CI-ready outputs.",
+    "ctaPlayground": "Run free analysis",
     "ctaCompetitor": "Competitor analysis",
     "ctaGithub": "View on GitHub",
     "ctaNpm": "Package on npm",
     "installLabel": "Install",
-    "pill1": "Business summary first",
-    "pill2": "Developer-ready fixes",
-    "pill3": "Open-source workflow",
-    "panelLabel": "Report preview",
-    "panelTitle": "One output, two audiences",
+    "pill1": "Executive visibility readout",
+    "pill2": "Developer-owned remediation",
+    "pill3": "Repeatable release gates",
+    "panelLabel": "Evidence workspace",
+    "panelTitle": "One audit surface for ranking, answers, and citations",
     "panelBadge": "Board + build ready",
     "panelBusinessLabel": "For business",
     "panelBusinessBody": "This page is strong at direct answers, but trust and freshness signals are leaving citation share on the table. Fixing schema and source attribution should improve visibility fastest.",
@@ -44,27 +44,27 @@
     "panelDeveloperFix3": "Increase authoritative external citations in core sections."
   },
   "Stats": {
-    "reports": "Report formats",
+    "reports": "Readable outputs",
     "reportsValue": "HTML · JSON · CSV",
-    "inputs": "Audit inputs",
+    "inputs": "Inputs covered",
     "inputsValue": "URL · file · folder · sitemap",
-    "ci": "CI-ready",
+    "ci": "Release gates",
     "ciValue": "Thresholds & exit codes",
-    "audiences": "Readable by",
+    "audiences": "Built for",
     "audiencesValue": "Business · SEO · Engineering"
   },
   "Why": {
-    "title": "Why this matters now",
-    "lead": "People still search the web. They also use chats that blend many sites. Messy pages or thin sources can rank yet miss buyers.",
-    "p1": "AEO helps you win direct answers. GEO helps AI pick you as a trusted source. You want both.",
-    "p2": "CiteOps gives one score and a fix list. It is like Lighthouse, but for AI-ready pages. SEO, content, and eng agree on “good” before ship.",
+    "title": "Why teams need a stricter visibility layer",
+    "lead": "AI discovery does not reward pages just because they exist. It rewards pages that answer cleanly, cite clearly, and expose enough trust for a model to use them.",
+    "p1": "AEO helps you become the answer. GEO helps AI systems treat your page as a reliable source. CiteOps audits both so the team can see the whole risk profile.",
+    "p2": "Think Lighthouse for AI-ready content: one repeatable score, one evidence trail, and one release bar for content, SEO, and engineering.",
     "card1Title": "Invisible in answer engines",
     "card1Body": "A page can rank and still miss AI answers. Weak structure and weak sources cause that.",
     "card2Title": "Teams read different signals",
     "card2Body": "Leaders want risk and impact. Devs want clear markup fixes. Many audits speak to only one group.",
     "card3Title": "Competitive gaps stay hidden",
     "card3Body": "Compare side by side. Then you know if a low score is OK—or if a rival wins AI cites.",
-    "quote": "If you cannot measure it against a checklist, you cannot improve it on every release."
+    "quote": "If answer visibility matters, it needs a release standard."
   },
   "Audience": {
     "eyebrow": "Who it is for",
@@ -150,11 +150,11 @@
     "row4Generic": "Early research or narrative drafting."
   },
   "Product": {
-    "title": "Built for product teams",
-    "subtitle": "Everything in the CLI is designed for shipping workflows, clearer reporting, and believable operational use.",
-    "highlight1": "Plain-English executive framing",
-    "highlight2": "Technical evidence per check",
-    "highlight3": "Open-source and CI-friendly",
+    "title": "An enterprise-grade audit loop inside an open-source CLI.",
+    "subtitle": "CiteOps is designed for teams that want AI visibility measurement to live beside their normal shipping workflow.",
+    "highlight1": "Executive risk framing",
+    "highlight2": "Evidence per failed check",
+    "highlight3": "Open-source, CI-friendly, local-first",
     "card1Title": "Reports that fit the audience",
     "card1Body": "HTML for stakeholders, JSON for pipelines, CSV for sitemap or folder runs.",
     "card2Title": "Project configuration",
@@ -169,8 +169,8 @@
     "card6Body": "Compare one live URL against a competitor URL to see score deltas, parity gaps, and first fixes."
   },
   "Action": {
-    "title": "See it in your terminal",
-    "subtitle": "The terminal stays honest and technical, while the site explains the business outcome in a cleaner way.",
+    "title": "Run the same inspection locally, in preview, and in CI.",
+    "subtitle": "Start with the playground, then move the workflow into the repo so every important page ships with an answer-visibility bar.",
     "imageAlt": "Terminal screenshot of the llm-citeops overview capability dashboard",
     "codeCaption": "Quick start",
     "codeBlock": "npx llm-citeops audit --url \"https://example.com/docs/article\" --compare \"https://competitor.example/docs/article\" --output html --output-path ./compare-report.html",
@@ -179,9 +179,9 @@
     "detail3": "Use the playground for fast exploration, then move the workflow into your repo."
   },
   "Report": {
-    "eyebrow": "Report design",
-    "title": "Make the report easy to scan in one minute and useful for a week of work.",
-    "subtitle": "The strongest reporting experience explains the business meaning first, then supports it with evidence and implementation details.",
+    "eyebrow": "Report intelligence",
+    "title": "A report that executives can read and builders can execute.",
+    "subtitle": "The strongest audit experience explains commercial risk first, then backs it with exact evidence and implementation details.",
     "businessLabel": "Audience 01",
     "businessTitle": "What business users should see first",
     "business1": "A short summary of whether this page is likely to earn trust and citations.",
@@ -230,7 +230,7 @@
     "emptyBody": "We are collecting feedback from teams using CiteOps. Check back, or star the repo to follow releases."
   },
   "Cta": {
-    "title": "Give your team a cleaner way to judge AI visibility before the next release.",
+    "title": "Give every launch page a sharper AI visibility review.",
     "subtitle": "Use the playground for quick exploration, then move the same workflow into the CLI and CI. Reports stay local and under your control.",
     "pill1": "Fast first scan",
     "pill2": "Clear executive readout",

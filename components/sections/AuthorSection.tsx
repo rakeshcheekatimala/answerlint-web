@@ -7,14 +7,15 @@ const AUTHOR_PROFILE = "https://github.com/rakeshcheekatimala";
 
 export function AuthorSection() {
   return (
-    <section className="border-b border-border bg-paper-muted/65">
+    <section className="border-b border-border bg-paper">
       <div className="safe-pad mx-auto max-w-content py-6 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-3 rounded-[24px] border border-border bg-card p-4 shadow-soft sm:flex-row sm:items-center sm:justify-between sm:p-5">
+        <div className="flex flex-col gap-px overflow-hidden border border-border bg-border sm:flex-row sm:items-stretch sm:justify-between">
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-subtle">
-              Author
-            </p>
-            <p className="mt-2 text-sm leading-7 text-ink">
+            <div className="h-full bg-card p-4 sm:p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-subtle">
+                Author
+              </p>
+              <p className="mt-2 text-sm leading-7 text-ink">
               <a
                 href={AUTHOR_PROFILE}
                 rel="author"
@@ -24,9 +25,10 @@ export function AuthorSection() {
               </a>
               {" "}
               builds CiteOps. llm-citeops is open source on GitHub and npm. 
-            </p>
+              </p>
+            </div>
           </div>
-          <div className="rounded-2xl bg-paper-muted px-4 py-3">
+          <div className="bg-card px-4 py-3 sm:min-w-56 sm:p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-subtle">
               Last updated
             </p>
