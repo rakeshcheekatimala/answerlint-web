@@ -1,14 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 
 import type {
-  PlaygroundComparisonResponse,
-  PlaygroundAuditResponse,
-  SiteOpsReport,
-} from "@/lib/siteops/types";
-
-type DownloadFormat = "json" | "html" | "csv";
+  AuditReportPreview,
+  ComparisonReportPreview,
+  GatedReportResponse,
+  SingleReportPreview,
+} from "@/lib/reports/types";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 const scoreTone: Record<string, string> = {
   excellent: "bg-emerald-100 text-emerald-800",
@@ -17,18 +18,20 @@ const scoreTone: Record<string, string> = {
   poor: "bg-rose-100 text-rose-800",
 };
 
-export function PlaygroundClient() {
-  const [url, setUrl] = useState("");
+export function PlaygroundClient({ initialUrl = "" }: { initialUrl?: string }) {
+  const [url, setUrl] = useState(initialUrl);
   const [competitorUrl, setCompetitorUrl] = useState("");
-  const [auditData, setAuditData] = useState<PlaygroundAuditResponse | null>(null);
-  const [comparisonData, setComparisonData] =
-    useState<PlaygroundComparisonResponse | null>(null);
+  const [auditData, setAuditData] = useState<GatedReportResponse | null>(null);
+  const [comparisonData, setComparisonData] = useState<GatedReportResponse | null>(
+    null,
+  );
   const [auditError, setAuditError] = useState("");
   const [comparisonError, setComparisonError] = useState("");
   const [isAuditing, startAudit] = useTransition();
   const [isComparing, startComparison] = useTransition();
 
-  const report = auditData?.report ?? null;
+  const report =
+    auditData?.preview.kind === "single" ? auditData.preview : null;
 
   function handleAuditSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -44,10 +47,10 @@ export function PlaygroundClient() {
           body: JSON.stringify({ url }),
         });
         const payload = (await readJsonResponse(response)) as
-          | PlaygroundAuditResponse
+          | GatedReportResponse
           | { error?: string };
 
-        if (!response.ok || !("report" in payload)) {
+        if (!response.ok || !("preview" in payload)) {
           throw new Error(readApiError(payload, "Audit failed."));
         }
 
@@ -73,10 +76,10 @@ export function PlaygroundClient() {
           body: JSON.stringify({ url, competitorUrl }),
         });
         const payload = (await readJsonResponse(response)) as
-          | PlaygroundComparisonResponse
+          | GatedReportResponse
           | { error?: string };
 
-        if (!response.ok || !("report" in payload)) {
+        if (!response.ok || !("preview" in payload)) {
           throw new Error(
             readApiError(payload, "Competitor comparison could not be completed."),
           );
@@ -91,36 +94,6 @@ export function PlaygroundClient() {
         );
       }
     });
-  }
-
-  function handleAuditDownload(format: DownloadFormat) {
-    if (!auditData) return;
-    downloadReport(auditData.downloads[format], format, "citeops-playground-report");
-  }
-
-  function handleComparisonDownload(format: DownloadFormat) {
-    if (!comparisonData) return;
-    downloadReport(
-      comparisonData.downloads[format],
-      format,
-      "citeops-competitor-comparison",
-    );
-  }
-
-  function downloadReport(content: string, format: DownloadFormat, baseName: string) {
-    const mimeType =
-      format === "json"
-        ? "application/json"
-        : format === "html"
-          ? "text/html"
-          : "text/csv";
-    const blob = new Blob([content], { type: mimeType });
-    const blobUrl = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = blobUrl;
-    link.download = `${baseName}.${format}`;
-    link.click();
-    URL.revokeObjectURL(blobUrl);
   }
 
   return (
@@ -142,8 +115,8 @@ export function PlaygroundClient() {
             </h1>
             <p className="mt-4 text-base leading-relaxed text-ink-muted sm:text-lg">
               Enter a URL to generate AEO and GEO scores with the SiteOps
-              heuristics. Add a competitor URL to audit both pages side by side,
-              compare score deltas, and find the gaps to close first.
+              heuristics. You will see a focused preview first, then unlock the
+              full report with a secure email link.
             </p>
           </div>
 
@@ -179,9 +152,8 @@ export function PlaygroundClient() {
               />
             </label>
             <p id="playground-help" className="text-sm text-ink-muted">
-              Best results come from public pages with clear headings,
-              authorship, and factual content. Competitor comparison mirrors
-              `llm-citeops audit --url ... --compare ...`.
+              Full reports are saved to your account so you can revisit the
+              recommendations, exports, and competitor gaps later.
             </p>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -190,7 +162,7 @@ export function PlaygroundClient() {
                 disabled={isAuditing}
                 className="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-fg transition hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isAuditing ? "Running SiteOps..." : "Playground"}
+                {isAuditing ? "Calculating score..." : "Get AI visibility score"}
               </button>
               <button
                 type="button"
@@ -219,44 +191,21 @@ export function PlaygroundClient() {
             <div className="mt-8 space-y-8">
               <ScoreSummary report={report} />
 
-              <section className="min-w-0 rounded-[24px] border border-border bg-wash p-5">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <h2 className="font-display text-2xl font-semibold text-ink">
-                      Download the generated report
-                    </h2>
-                    <p className="mt-1 text-sm text-ink-muted">
-                      Export the current SiteOps run as JSON, HTML, or CSV.
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <DownloadButton
-                      label="Download JSON"
-                      onClick={() => handleAuditDownload("json")}
-                    />
-                    <DownloadButton
-                      label="Download HTML"
-                      onClick={() => handleAuditDownload("html")}
-                    />
-                    <DownloadButton
-                      label="Download CSV"
-                      onClick={() => handleAuditDownload("csv")}
-                    />
-                  </div>
-                </div>
-              </section>
+              {auditData ? (
+                <UnlockReportPanel
+                  reportId={auditData.reportId}
+                  claimToken={auditData.claimToken}
+                  preview={auditData.preview}
+                />
+              ) : null}
 
-              <AuditList
-                title="Priority fixes"
-                subtitle="These are the highest-impact issues from the SiteOps pass."
-                audits={report.audits.filter((audit) => audit.status !== "pass")}
+              <PreviewIssueList
+                title="Preview blockers"
+                subtitle="Unlock the full report for all findings, evidence, and exports."
+                issues={report.topIssues}
               />
 
-              <AuditList
-                title="Passing signals"
-                subtitle="Signals this page is already doing well."
-                audits={report.audits.filter((audit) => audit.status === "pass")}
-              />
+              <LockedValuePanel />
             </div>
           ) : null}
         </section>
@@ -290,10 +239,7 @@ export function PlaygroundClient() {
           </div>
 
           {comparisonData ? (
-            <CompetitorResults
-              data={comparisonData}
-              onDownload={handleComparisonDownload}
-            />
+            <CompetitorResults data={comparisonData} />
           ) : (
             <div className="min-w-0 rounded-[28px] border border-dashed border-border-strong bg-card p-6">
               <h2 className="font-display text-2xl font-semibold text-ink">
@@ -312,7 +258,7 @@ export function PlaygroundClient() {
   );
 }
 
-function ScoreSummary({ report }: { report: SiteOpsReport }) {
+function ScoreSummary({ report }: { report: SingleReportPreview }) {
   const scores = [
     { label: "Composite", value: report.scores.composite },
     { label: "AEO", value: report.scores.aeo },
@@ -327,10 +273,10 @@ function ScoreSummary({ report }: { report: SiteOpsReport }) {
             Audit result
           </p>
           <h2 className="mt-2 break-words font-display text-2xl font-semibold text-ink sm:text-3xl">
-            {report.url}
+            {report.targetUrl}
           </h2>
           <p className="mt-2 break-all text-sm text-ink-muted">
-            Generated {new Date(report.timestamp).toLocaleString()}
+            Generated {new Date(report.createdAt).toLocaleString()}
           </p>
         </div>
         <span
@@ -357,20 +303,34 @@ function ScoreSummary({ report }: { report: SiteOpsReport }) {
           </div>
         ))}
       </div>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-[18px] border border-border bg-card px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-ink-subtle">
+            Preview blockers
+          </p>
+          <p className="mt-1 text-2xl font-semibold text-ink">{report.issueCount}</p>
+        </div>
+        <div className="rounded-[18px] border border-border bg-card px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-ink-subtle">
+            Passing signals
+          </p>
+          <p className="mt-1 text-2xl font-semibold text-ink">{report.passCount}</p>
+        </div>
+      </div>
     </section>
   );
 }
 
-function AuditList({
+function PreviewIssueList({
   title,
   subtitle,
-  audits,
+  issues,
 }: {
   title: string;
   subtitle: string;
-  audits: SiteOpsReport["audits"];
+  issues: SingleReportPreview["topIssues"];
 }) {
-  if (audits.length === 0) {
+  if (issues.length === 0) {
     return null;
   }
 
@@ -379,53 +339,46 @@ function AuditList({
       <h2 className="font-display text-3xl font-semibold text-ink">{title}</h2>
       <p className="mt-2 text-sm text-ink-muted">{subtitle}</p>
       <div className="mt-5 space-y-4">
-        {audits.map((audit) => (
+        {issues.map((issue) => (
           <article
-            key={audit.id}
+            key={issue.id}
             className="min-w-0 rounded-[24px] border border-border bg-card p-5"
           >
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
                 <h3 className="break-words font-display text-xl font-semibold text-ink sm:text-2xl">
-                  {audit.title}
+                  {issue.title}
                 </h3>
                 <p className="mt-2 text-sm leading-7 text-ink-muted">
-                  {audit.evidence}
+                  {issue.evidence}
                 </p>
               </div>
               <span
                 className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] ${
-                  audit.status === "pass"
+                  issue.status === "pass"
                     ? "bg-emerald-100 text-emerald-800"
-                    : audit.status === "warn"
+                    : issue.status === "warn"
                       ? "bg-amber-100 text-amber-800"
                       : "bg-rose-100 text-rose-800"
                 }`}
               >
-                {audit.status}
+                {issue.status}
               </span>
             </div>
 
-            {audit.recommendation ? (
+            {issue.priority ? (
               <div className="mt-4 rounded-[20px] bg-paper-muted p-4">
                 <div className="flex flex-wrap gap-2">
                   <span className="rounded-full bg-card px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-ink-subtle">
-                    {audit.recommendation.priority} priority
+                    {issue.priority} priority
                   </span>
                   <span className="rounded-full bg-card px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-ink-subtle">
-                    +{audit.recommendation.score_impact} impact
+                    +{issue.scoreImpact ?? 0} impact
                   </span>
                 </div>
-                <p className="mt-3 text-sm leading-7 text-ink">
-                  {audit.recommendation.instruction}
+                <p className="mt-3 text-sm leading-7 text-ink-muted">
+                  Full implementation details unlock in the saved report.
                 </p>
-                {audit.recommendation.code_snippet ? (
-                  <pre className="mt-4 max-w-full overflow-x-auto rounded-[18px] bg-ink p-4 text-sm leading-6 text-paper">
-                    <code className="block w-max min-w-full whitespace-pre">
-                      {audit.recommendation.code_snippet}
-                    </code>
-                  </pre>
-                ) : null}
               </div>
             ) : null}
           </article>
@@ -437,17 +390,33 @@ function AuditList({
 
 function CompetitorResults({
   data,
-  onDownload,
 }: {
-  data: PlaygroundComparisonResponse;
-  onDownload: (format: DownloadFormat) => void;
+  data: GatedReportResponse;
 }) {
-  const { report } = data;
-  const { comparison, target, competitor } = report;
+  if (data.preview.kind !== "comparison") {
+    return null;
+  }
+
+  const preview = data.preview;
   const scoreItems = [
-    { label: "Composite", value: comparison.scores.composite },
-    { label: "AEO", value: comparison.scores.aeo },
-    { label: "GEO", value: comparison.scores.geo },
+    {
+      label: "Composite",
+      target: preview.targetScores.composite,
+      competitor: preview.competitorScores.composite,
+      delta: preview.targetScores.composite - preview.competitorScores.composite,
+    },
+    {
+      label: "AEO",
+      target: preview.targetScores.aeo,
+      competitor: preview.competitorScores.aeo,
+      delta: preview.targetScores.aeo - preview.competitorScores.aeo,
+    },
+    {
+      label: "GEO",
+      target: preview.targetScores.geo,
+      competitor: preview.competitorScores.geo,
+      delta: preview.targetScores.geo - preview.competitorScores.geo,
+    },
   ];
 
   return (
@@ -457,16 +426,16 @@ function CompetitorResults({
           Competitor verdict
         </p>
         <h2 className="mt-3 font-display text-3xl font-semibold text-ink">
-          {comparison.leader.label}
+          {preview.leader.label}
         </h2>
         <p className="mt-3 text-sm leading-7 text-ink-muted">
-          {comparison.leader.summary}
+          {preview.leader.summary}
         </p>
       </div>
 
       <div className="grid gap-3">
-        <UrlCard label="Target" url={target.url} />
-        <UrlCard label="Competitor" url={competitor.url} />
+        <UrlCard label="Target" url={preview.targetUrl} />
+        <UrlCard label="Competitor" url={preview.competitorUrl} />
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
@@ -479,47 +448,22 @@ function CompetitorResults({
               {item.label}
             </p>
             <p className="mt-2 font-display text-2xl font-semibold text-ink">
-              {item.value.target} vs {item.value.competitor}
+              {item.target} vs {item.competitor}
             </p>
-            <DeltaChip delta={item.value.delta} />
+            <DeltaChip delta={item.delta} />
           </div>
         ))}
       </div>
 
-      <div className="rounded-[22px] bg-paper-muted p-4">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h3 className="font-display text-2xl font-semibold text-ink">
-              Download comparison
-            </h3>
-            <p className="mt-1 text-sm text-ink-muted">
-              Export the target-vs-competitor run as JSON, HTML, or CSV.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <DownloadButton
-              label="Download JSON"
-              onClick={() => onDownload("json")}
-            />
-            <DownloadButton
-              label="Download HTML"
-              onClick={() => onDownload("html")}
-            />
-            <DownloadButton
-              label="Download CSV"
-              onClick={() => onDownload("csv")}
-            />
-          </div>
-        </div>
-      </div>
-
-      <InsightList title="Improve first" items={comparison.improve_first} />
-      <InsightList title="Competitor edge" items={comparison.competitor_edges} />
-      <DeltaList title="Target advantages" items={comparison.target_advantages} />
-      <DeltaList
-        title="Competitor advantages"
-        items={comparison.competitor_advantages}
+      <UnlockReportPanel
+        reportId={data.reportId}
+        claimToken={data.claimToken}
+        preview={data.preview}
+        compact
       />
+
+      <InsightList title="Improve first" items={preview.improveFirst} />
+      <InsightList title="Competitor edge" items={preview.competitorEdges} />
     </div>
   );
 }
@@ -565,7 +509,7 @@ function InsightList({
   items,
 }: {
   title: string;
-  items: PlaygroundComparisonResponse["report"]["comparison"]["improve_first"];
+  items: ComparisonReportPreview["improveFirst"];
 }) {
   return (
     <div>
@@ -604,56 +548,197 @@ function InsightList({
   );
 }
 
-function DeltaList({
-  title,
-  items,
-}: {
-  title: string;
-  items: PlaygroundComparisonResponse["report"]["comparison"]["target_advantages"];
-}) {
-  if (items.length === 0) return null;
+function LockedValuePanel() {
+  const items = [
+    "All priority fixes with implementation guidance",
+    "Downloadable JSON, HTML, and CSV exports",
+    "Saved report access from your secure email link",
+  ];
 
   return (
-    <div>
-      <h3 className="font-display text-2xl font-semibold text-ink">{title}</h3>
-      <div className="mt-4 space-y-3">
-        {items.slice(0, 5).map((item) => (
-          <article
-            key={`${title}-${item.id}`}
-            className="rounded-[20px] border border-border bg-paper-muted p-4"
-          >
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h4 className="text-lg font-semibold text-ink">{item.title}</h4>
-                <p className="mt-1 text-sm text-ink-muted">
-                  Target {item.target_status} vs competitor{" "}
-                  {item.competitor_status}
-                </p>
-              </div>
-              <DeltaChip delta={item.delta} />
-            </div>
-          </article>
+    <section className="rounded-[24px] border border-border bg-paper-muted p-5">
+      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-ink-subtle">
+        Unlocks in full report
+      </p>
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        {items.map((item) => (
+          <div key={item} className="rounded-[18px] border border-border bg-card p-4">
+            <p className="text-sm leading-6 text-ink">{item}</p>
+          </div>
         ))}
       </div>
-    </div>
+    </section>
   );
 }
 
-function DownloadButton({
-  label,
-  onClick,
+function UnlockReportPanel({
+  reportId,
+  claimToken,
+  preview,
+  compact = false,
 }: {
-  label: string;
-  onClick: () => void;
+  reportId: string;
+  claimToken: string;
+  preview: AuditReportPreview;
+  compact?: boolean;
 }) {
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [isSending, startSending] = useTransition();
+  const [isGoogleLoading, startGoogle] = useTransition();
+  const googleAuthEnabled = process.env.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH === "true";
+
+  const reportPath = `/tools/geo-audit/report?id=${encodeURIComponent(
+    reportId,
+  )}&token=${encodeURIComponent(claimToken)}`;
+
+  function handleEmailSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setMessage("");
+    setError("");
+
+    startSending(async () => {
+      try {
+        const response = await fetch(`/api/reports/${reportId}/unlock`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ email, claimToken }),
+        });
+        const payload = (await readJsonResponse(response)) as
+          | { ok: boolean; message: string }
+          | { error?: string };
+
+        if (!response.ok || !("ok" in payload)) {
+          throw new Error(readApiError(payload, "Unable to send report link."));
+        }
+
+        setMessage(payload.message);
+      } catch (sendError) {
+        setError(
+          sendError instanceof Error
+            ? sendError.message
+            : "Unable to send report link.",
+        );
+      }
+    });
+  }
+
+  function handleGoogleUnlock() {
+    setMessage("");
+    setError("");
+
+    startGoogle(async () => {
+      try {
+        const supabase = createSupabaseBrowserClient();
+        const redirectTo = `${window.location.origin}/auth/confirm?next=${encodeURIComponent(
+          reportPath,
+        )}`;
+        const { data, error: authError } = await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo,
+            queryParams: { prompt: "select_account" },
+          },
+        });
+
+        if (authError) {
+          throw authError;
+        }
+
+        if (data.url) {
+          window.location.href = data.url;
+        }
+      } catch (googleError) {
+        setError(
+          googleError instanceof Error
+            ? googleError.message
+            : "Unable to start Google sign-in.",
+        );
+      }
+    });
+  }
+
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="max-w-full rounded-full border border-border-strong bg-card px-4 py-2 text-sm font-semibold text-ink transition hover:border-accent hover:text-accent"
+    <section
+      className={`rounded-[24px] border border-border-strong bg-ink p-5 text-paper shadow-soft ${
+        compact ? "" : "sm:p-6"
+      }`}
     >
-      {label}
-    </button>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-paper-muted">
+            Secure unlock
+          </p>
+          <h2 className="mt-2 font-display text-2xl font-semibold">
+            Send the full report to your inbox
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm leading-7 text-paper-muted">
+            The saved report includes all recommendations, evidence, and exports
+            for {preview.kind === "comparison" ? "this comparison" : preview.targetUrl}.
+          </p>
+        </div>
+        <Link
+          href={reportPath}
+          className="inline-flex w-fit items-center justify-center rounded-full border border-paper/25 px-4 py-2 text-sm font-semibold text-paper transition hover:bg-paper hover:text-ink"
+        >
+          Already unlocked?
+        </Link>
+      </div>
+
+      <form
+        className="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]"
+        onSubmit={handleEmailSubmit}
+        noValidate
+      >
+        <label className="block">
+          <span className="sr-only">Work email</span>
+          <input
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="name@company.com"
+            autoComplete="email"
+            className="w-full rounded-2xl border border-paper/20 bg-paper px-4 py-3 text-base text-ink outline-none transition placeholder:text-ink-subtle focus:border-accent"
+          />
+        </label>
+        <button
+          type="submit"
+          disabled={isSending}
+          className="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-fg transition hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isSending ? "Sending..." : "Send secure report link"}
+        </button>
+      </form>
+
+      {googleAuthEnabled ? (
+        <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <button
+            type="button"
+            onClick={handleGoogleUnlock}
+            disabled={isGoogleLoading}
+            className="inline-flex items-center justify-center rounded-full border border-paper/25 px-5 py-2.5 text-sm font-semibold text-paper transition hover:bg-paper hover:text-ink disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isGoogleLoading ? "Opening Google..." : "Continue with Google"}
+          </button>
+          <p className="text-xs leading-6 text-paper-muted">
+            Email is primary. Google is available for teams that prefer account
+            sign-in.
+          </p>
+        </div>
+      ) : null}
+
+      {message ? (
+        <p className="mt-4 rounded-2xl border border-emerald-300/40 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          {message}
+        </p>
+      ) : null}
+      {error ? (
+        <p className="mt-4 rounded-2xl border border-rose-300/40 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+          {error}
+        </p>
+      ) : null}
+    </section>
   );
 }
 

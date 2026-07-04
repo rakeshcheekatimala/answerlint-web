@@ -4,7 +4,12 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { PlaygroundClient } from "@/components/playground/PlaygroundClient";
 
-export default function PlaygroundPage() {
+export default async function PlaygroundPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ siteUrl?: string }>;
+}) {
+  const { siteUrl } = await searchParams;
   const structuredData = [
     {
       "@context": "https://schema.org",
@@ -12,7 +17,7 @@ export default function PlaygroundPage() {
       name: "CiteOps Playground",
       url: `${SITE_URL}/playground`,
       description:
-        "Interactive AEO and GEO audit playground with downloadable reports.",
+        "Interactive AEO and GEO audit playground with secure saved reports.",
     },
     {
       "@context": "https://schema.org",
@@ -42,7 +47,7 @@ export default function PlaygroundPage() {
         id="main-content"
         className="min-h-screen bg-gradient-to-b from-wash via-paper to-paper-muted"
       >
-        <PlaygroundClient />
+        <PlaygroundClient initialUrl={siteUrl ?? ""} />
       </main>
       <SiteFooter />
     </>

@@ -46,3 +46,28 @@ Deploy on [Vercel](https://vercel.com) or any Node host. For static export, add 
 | `NEXT_PUBLIC_NPM_URL` | npm package URL |
 | `NEXT_PUBLIC_INSTALL_CMD` | Install command shown in hero and CTA |
 | `NEXT_PUBLIC_OVERVIEW_IMAGE_URL` | Terminal screenshot URL |
+
+## Supabase report unlocks
+
+The AI visibility audit flow stores completed reports in Supabase and returns a
+limited preview until the visitor unlocks the report with email or Google.
+
+1. Create a Supabase Cloud project.
+2. Run [`supabase/audit-reports.sql`](supabase/audit-reports.sql) in the SQL editor.
+3. Enable Email magic links and, optionally, Google OAuth in Supabase Auth.
+4. Add redirect URLs for local development:
+
+```text
+http://localhost:3000/auth/confirm
+http://localhost:3000/tools/geo-audit/report
+```
+
+5. Add environment variables:
+
+| Variable | Purpose |
+|----------|---------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable/anon key |
+| `SUPABASE_SECRET_KEY` | Supabase service role key for trusted server routes |
+| `NEXT_PUBLIC_SITE_URL` | Local or production origin used in magic-link redirects |
+| `NEXT_PUBLIC_ENABLE_GOOGLE_AUTH` | Set to `true` after Google OAuth is configured |

@@ -4,7 +4,9 @@ import {
   compareUrls,
   createComparisonDownloads,
 } from "@/lib/siteops/audit";
-import type { PlaygroundComparisonResponse } from "@/lib/siteops/types";
+import { createComparisonReportPreview } from "@/lib/reports/preview";
+import { storeAuditReport } from "@/lib/reports/storage";
+import type { GatedReportResponse } from "@/lib/reports/types";
 
 export const runtime = "nodejs";
 
@@ -27,9 +29,19 @@ export async function POST(request: Request) {
     }
 
     const report = await compareUrls(body.url, body.competitorUrl);
-    const payload: PlaygroundComparisonResponse = {
+    const downloads = createComparisonDownloads(report);
+    const preview = createComparisonReportPreview(report);
+    const storedReport = await storeAuditReport({
+      kind: "comparison",
+      targetUrl: report.target.url,
+      competitorUrl: report.competitor.url,
+      preview,
       report,
-      downloads: createComparisonDownloads(report),
+      downloads,
+    });
+    const payload: GatedReportResponse = {
+      ...storedReport,
+      preview,
     };
 
     return NextResponse.json(payload);
