@@ -1,4 +1,10 @@
+import crypto from "node:crypto";
+
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import {
+  getReportAccessConfig,
+  type ReportStorageMode,
+} from "@/lib/reports/access";
 import {
   createClaimToken,
   formatSupabaseStorageError,
@@ -30,6 +36,27 @@ type StoredReportRow = {
   created_at: string;
   unlocked_at: string | null;
 };
+
+export type StoreAuditReportResult = {
+  reportId: string;
+  claimToken: string;
+  storageStatus: "stored" | "skipped" | "failed";
+  storageError?: string;
+};
+
+function createLocalReportHandle(
+  storageStatus: StoreAuditReportResult["storageStatus"] = "skipped",
+): StoreAuditReportResult {
+  return {
+    reportId: `local_${crypto.randomUUID()}`,
+    claimToken: createClaimToken(),
+    storageStatus,
+  };
+}
+
+function shouldSkipStorage(storageMode: ReportStorageMode) {
+  return storageMode === "disabled";
+}
 
 export async function storeAuditReport({
   kind,
@@ -85,7 +112,32 @@ export async function storeAuditReport({
   return {
     reportId: data.id as string,
     claimToken,
+    storageStatus: "stored" as const,
   };
+}
+
+export async function storeAuditReportBestEffort(
+  input: Parameters<typeof storeAuditReport>[0],
+): Promise<StoreAuditReportResult> {
+  const config = getReportAccessConfig();
+
+  if (shouldSkipStorage(config.storageMode)) {
+    return createLocalReportHandle();
+  }
+
+  try {
+    return await storeAuditReport(input);
+  } catch (error) {
+    if (config.storageMode === "required") {
+      throw error;
+    }
+
+    return {
+      ...createLocalReportHandle("failed"),
+      storageError:
+        error instanceof Error ? error.message : "Unable to store report.",
+    };
+  }
 }
 
 export async function recordAuditEvent(
@@ -105,7 +157,7 @@ export async function recordAuditEvent(
   }
 }
 
-export async function markReportUnlockIntent({
+export async function captureReportLead({
   reportId,
   claimToken,
   email,
@@ -113,6 +165,34 @@ export async function markReportUnlockIntent({
   reportId: string;
   claimToken: string;
   email: string;
+}) {
+  if (reportId.startsWith("local_")) {
+    return {
+      captured: false,
+      reason: "Report was generated without persistent storage.",
+    };
+  }
+
+  await markReportUnlockIntent({
+    reportId,
+    claimToken,
+    email,
+    eventType: "email_captured",
+  });
+
+  return { captured: true };
+}
+
+export async function markReportUnlockIntent({
+  reportId,
+  claimToken,
+  email,
+  eventType = "magic_link_requested",
+}: {
+  reportId: string;
+  claimToken: string;
+  email: string;
+  eventType?: string;
 }) {
   const supabase = createSupabaseAdminClient();
 
@@ -143,7 +223,7 @@ export async function markReportUnlockIntent({
     throw new Error(`Unable to save email: ${updateError.message}`);
   }
 
-  await recordAuditEvent(reportId, "magic_link_requested", {
+  await recordAuditEvent(reportId, eventType, {
     email: normalizedEmail,
   });
 }

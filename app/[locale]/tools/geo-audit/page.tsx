@@ -16,7 +16,7 @@ export default async function GeoAuditPage({
     name: "AI Visibility Score",
     url: `${SITE_URL}/tools/geo-audit`,
     description:
-      "Run an AI visibility audit preview, then unlock the full saved report with a secure email link.",
+      "Run an AI visibility audit preview, then unlock the full report with progressive email capture.",
   };
 
   return (

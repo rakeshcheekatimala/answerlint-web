@@ -115,6 +115,10 @@ export function UnlockedReportClient({
     );
   }
 
+  return <ReportContent data={data} />;
+}
+
+export function ReportContent({ data }: { data: UnlockedReportResponse }) {
   return (
     <div className="space-y-8">
       <ReportHeader data={data} />
@@ -154,10 +158,10 @@ function ReportHeader({ data }: { data: UnlockedReportResponse }) {
         </div>
         <div className="rounded-[20px] border border-border bg-paper-muted p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-subtle">
-            Unlocked for
+            {data.email ? "Unlocked for" : "Report access"}
           </p>
           <p className="mt-2 break-all text-sm font-semibold text-ink">
-            {data.email}
+            {data.email ?? "Ready to download"}
           </p>
           <p className="mt-2 text-xs text-ink-muted">
             Created {new Date(data.createdAt).toLocaleString()}

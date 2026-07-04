@@ -17,7 +17,7 @@ export default async function PlaygroundPage({
       name: "CiteOps Playground",
       url: `${SITE_URL}/playground`,
       description:
-        "Interactive AEO and GEO audit playground with secure saved reports.",
+        "Interactive AEO and GEO audit playground with progressive report unlocks.",
     },
     {
       "@context": "https://schema.org",

@@ -8,6 +8,7 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "json-summary"],
       include: [
+        "lib/reports/access.ts",
         "lib/reports/preview.ts",
         "lib/reports/redirects.ts",
         "lib/reports/tokens.ts",

@@ -5,6 +5,7 @@ import type {
   SiteOpsDownloads,
   SiteOpsReport,
 } from "@/lib/siteops/types";
+import type { ReportAccessConfig } from "@/lib/reports/access";
 
 export type AuditReportKind = "single" | "comparison";
 
@@ -45,6 +46,13 @@ export type GatedReportResponse = {
   reportId: string;
   claimToken: string;
   preview: AuditReportPreview;
+  access: ReportAccessConfig;
+  storageStatus: "stored" | "skipped" | "failed";
+  storageError?: string;
+  report:
+    | PlaygroundAuditResponse["report"]
+    | PlaygroundComparisonResponse["report"];
+  downloads: SiteOpsDownloads;
 };
 
 export type UnlockedReportResponse = {

@@ -1,14 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 import type {
-  AuditReportPreview,
   ComparisonReportPreview,
   GatedReportResponse,
   SingleReportPreview,
+  UnlockedReportResponse,
 } from "@/lib/reports/types";
+import { ReportContent } from "@/components/reports/UnlockedReportClient";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 const scoreTone: Record<string, string> = {
@@ -116,7 +117,7 @@ export function PlaygroundClient({ initialUrl = "" }: { initialUrl?: string }) {
             <p className="mt-4 text-base leading-relaxed text-ink-muted sm:text-lg">
               Enter a URL to generate AEO and GEO scores with the SiteOps
               heuristics. You will see a focused preview first, then unlock the
-              full report with a secure email link.
+              full report when you share where we should send follow-up notes.
             </p>
           </div>
 
@@ -192,16 +193,12 @@ export function PlaygroundClient({ initialUrl = "" }: { initialUrl?: string }) {
               <ScoreSummary report={report} />
 
               {auditData ? (
-                <UnlockReportPanel
-                  reportId={auditData.reportId}
-                  claimToken={auditData.claimToken}
-                  preview={auditData.preview}
-                />
+                <UnlockReportPanel data={auditData} />
               ) : null}
 
               <PreviewIssueList
                 title="Preview blockers"
-                subtitle="Unlock the full report for all findings, evidence, and exports."
+                subtitle="The full report includes every finding, implementation note, and export."
                 issues={report.topIssues}
               />
 
@@ -456,9 +453,7 @@ function CompetitorResults({
       </div>
 
       <UnlockReportPanel
-        reportId={data.reportId}
-        claimToken={data.claimToken}
-        preview={data.preview}
+        data={data}
         compact
       />
 
@@ -552,7 +547,7 @@ function LockedValuePanel() {
   const items = [
     "All priority fixes with implementation guidance",
     "Downloadable JSON, HTML, and CSV exports",
-    "Saved report access from your secure email link",
+    "Optional account path for saved reports later",
   ];
 
   return (
@@ -572,56 +567,113 @@ function LockedValuePanel() {
 }
 
 function UnlockReportPanel({
-  reportId,
-  claimToken,
-  preview,
+  data,
   compact = false,
 }: {
-  reportId: string;
-  claimToken: string;
-  preview: AuditReportPreview;
+  data: GatedReportResponse;
   compact?: boolean;
 }) {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [unlockedEmail, setUnlockedEmail] = useState<string | null>(null);
   const [isSending, startSending] = useTransition();
   const [isGoogleLoading, startGoogle] = useTransition();
-  const googleAuthEnabled = process.env.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH === "true";
+  const isMagicLinkMode = data.access.accessMode === "magic_link";
+  const isGoogleMode = data.access.accessMode === "google_login";
+  const isOpenMode = data.access.accessMode === "open";
+  const googleAuthEnabled = data.access.googleAuthEnabled;
+  const isUnlocked = isOpenMode || unlockedEmail !== null;
+  const isEmailSubmitDisabled = isSending || (isMagicLinkMode && resendCooldown > 0);
 
   const reportPath = `/tools/geo-audit/report?id=${encodeURIComponent(
-    reportId,
-  )}&token=${encodeURIComponent(claimToken)}`;
+    data.reportId,
+  )}&token=${encodeURIComponent(data.claimToken)}`;
+
+  const unlockedReport = createUnlockedReportResponse(data, unlockedEmail);
+
+  useEffect(() => {
+    if (!isMagicLinkMode || resendCooldown <= 0) return;
+
+    const timer = window.setInterval(() => {
+      setResendCooldown((seconds) => Math.max(0, seconds - 1));
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [isMagicLinkMode, resendCooldown]);
 
   function handleEmailSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (isEmailSubmitDisabled) return;
     setMessage("");
     setError("");
 
     startSending(async () => {
+      const endpoint = `/api/reports/${data.reportId}/unlock`;
       try {
-        const response = await fetch(`/api/reports/${reportId}/unlock`, {
+        const response = await fetch(endpoint, {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ email, claimToken }),
+          body: JSON.stringify({ email, claimToken: data.claimToken }),
         });
         const payload = (await readJsonResponse(response)) as
-          | { ok: boolean; message: string }
+          | { ok: boolean; captured?: boolean; message: string }
           | { error?: string };
 
         if (!response.ok || !("ok" in payload)) {
-          throw new Error(readApiError(payload, "Unable to send report link."));
+          const apiError = new Error(
+            readApiError(
+              payload,
+              isMagicLinkMode
+                ? "Unable to send report link."
+                : "Unable to unlock report.",
+            ),
+          );
+
+          if (response.status === 429) {
+            setResendCooldown(60);
+          }
+
+          throw apiError;
+        }
+
+        if (isMagicLinkMode) {
+          setResendCooldown(60);
+        } else {
+          setUnlockedEmail(email.trim().toLowerCase());
         }
 
         setMessage(payload.message);
       } catch (sendError) {
         setError(
           sendError instanceof Error
-            ? sendError.message
-            : "Unable to send report link.",
+            ? formatRequestError(sendError, endpoint)
+            : "Unable to unlock report.",
         );
       }
     });
+  }
+
+  if (isUnlocked) {
+    return (
+      <div className={compact ? "space-y-5" : "space-y-8"}>
+        <section className="rounded-[24px] border border-emerald-200 bg-emerald-50 p-5 text-emerald-950">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700">
+            Report ready
+          </p>
+          <h2 className="mt-2 font-display text-2xl font-semibold">
+            Your full report is unlocked.
+          </h2>
+          <p className="mt-2 text-sm leading-7 text-emerald-900">
+            {unlockedEmail
+              ? "Download the report below. We will use the email only to understand who found the audit useful and follow up about the product."
+              : "Download the report below. Email capture is currently disabled for this flow."}
+          </p>
+        </section>
+        <ReportContent data={unlockedReport} />
+      </div>
+    );
   }
 
   function handleGoogleUnlock() {
@@ -668,50 +720,78 @@ function UnlockReportPanel({
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-paper-muted">
-            Secure unlock
+            {isMagicLinkMode
+              ? "Secure unlock"
+              : isGoogleMode
+                ? "Account unlock"
+                : "Unlock report"}
           </p>
           <h2 className="mt-2 font-display text-2xl font-semibold">
-            Send the full report to your inbox
+            {isMagicLinkMode
+              ? "Send the full report to your inbox"
+              : isGoogleMode
+                ? "Continue with Google to save this report"
+                : "Enter email to download the full report"}
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-7 text-paper-muted">
             The saved report includes all recommendations, evidence, and exports
-            for {preview.kind === "comparison" ? "this comparison" : preview.targetUrl}.
+            for{" "}
+            {data.preview.kind === "comparison"
+              ? "this comparison"
+              : data.preview.targetUrl}
+            .
           </p>
         </div>
-        <Link
-          href={reportPath}
-          className="inline-flex w-fit items-center justify-center rounded-full border border-paper/25 px-4 py-2 text-sm font-semibold text-paper transition hover:bg-paper hover:text-ink"
-        >
-          Already unlocked?
-        </Link>
+        {isMagicLinkMode ? (
+          <Link
+            href={reportPath}
+            className="inline-flex w-fit items-center justify-center rounded-full border border-paper/25 px-4 py-2 text-sm font-semibold text-paper transition hover:bg-paper hover:text-ink"
+          >
+            Already unlocked?
+          </Link>
+        ) : null}
       </div>
 
-      <form
-        className="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]"
-        onSubmit={handleEmailSubmit}
-        noValidate
-      >
-        <label className="block">
-          <span className="sr-only">Work email</span>
-          <input
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="name@company.com"
-            autoComplete="email"
-            className="w-full rounded-2xl border border-paper/20 bg-paper px-4 py-3 text-base text-ink outline-none transition placeholder:text-ink-subtle focus:border-accent"
-          />
-        </label>
-        <button
-          type="submit"
-          disabled={isSending}
-          className="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-fg transition hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
+      {!isGoogleMode ? (
+        <form
+          className="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]"
+          onSubmit={handleEmailSubmit}
+          noValidate
         >
-          {isSending ? "Sending..." : "Send secure report link"}
-        </button>
-      </form>
+          <label className="block">
+            <span className="sr-only">Work email</span>
+            <input
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="name@company.com"
+              autoComplete="email"
+              className="w-full rounded-2xl border border-paper/20 bg-paper px-4 py-3 text-base text-ink outline-none transition placeholder:text-ink-subtle focus:border-accent"
+            />
+          </label>
+          <button
+            type="submit"
+            disabled={isEmailSubmitDisabled}
+            className="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-fg transition hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isSending
+              ? isMagicLinkMode
+                ? "Sending..."
+                : "Unlocking..."
+              : isMagicLinkMode && resendCooldown > 0
+                ? `Retry in ${resendCooldown}s`
+                : isMagicLinkMode
+                  ? "Send secure report link"
+                  : "Unlock full report"}
+          </button>
+        </form>
+      ) : null}
 
-      {googleAuthEnabled ? (
+      {isGoogleMode && !googleAuthEnabled ? (
+        <p className="mt-4 rounded-2xl border border-amber-300/40 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Google sign-in is not configured for this environment.
+        </p>
+      ) : googleAuthEnabled || isGoogleMode ? (
         <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
           <button
             type="button"
@@ -722,8 +802,8 @@ function UnlockReportPanel({
             {isGoogleLoading ? "Opening Google..." : "Continue with Google"}
           </button>
           <p className="text-xs leading-6 text-paper-muted">
-            Email is primary. Google is available for teams that prefer account
-            sign-in.
+            Google sign-in is for the future saved-reports experience. Email
+            capture remains the lighter MVP path.
           </p>
         </div>
       ) : null}
@@ -753,6 +833,32 @@ function readApiError(payload: unknown, fallback: string) {
   }
 
   return fallback;
+}
+
+function formatRequestError(error: Error, endpoint: string) {
+  if (error instanceof TypeError && error.message === "Failed to fetch") {
+    return `Unable to reach the report unlock endpoint at ${endpoint}. Refresh the page and try again.`;
+  }
+
+  return error.message;
+}
+
+function createUnlockedReportResponse(
+  data: GatedReportResponse,
+  email: string | null,
+): UnlockedReportResponse {
+  return {
+    id: data.reportId,
+    kind: data.preview.kind,
+    email,
+    targetUrl: data.preview.targetUrl,
+    competitorUrl:
+      data.preview.kind === "comparison" ? data.preview.competitorUrl : null,
+    createdAt: data.preview.createdAt,
+    unlockedAt: new Date().toISOString(),
+    report: data.report,
+    downloads: data.downloads,
+  };
 }
 
 async function readJsonResponse(response: Response) {

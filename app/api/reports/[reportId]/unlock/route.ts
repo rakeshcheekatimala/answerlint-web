@@ -1,13 +1,71 @@
 import { NextResponse } from "next/server";
 
 import {
+  canFailOpen,
+  getReportAccessConfig,
+  shouldSendMagicLink,
+} from "@/lib/reports/access";
+import {
   buildReportMagicLinkRedirect,
   getPublicSiteOrigin,
 } from "@/lib/reports/redirects";
-import { markReportUnlockIntent } from "@/lib/reports/storage";
+import {
+  captureReportLead,
+  markReportUnlockIntent,
+} from "@/lib/reports/storage";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
+
+class ReportUnlockError extends Error {
+  constructor(
+    message: string,
+    readonly status = 500,
+  ) {
+    super(message);
+  }
+}
+
+function getMagicLinkAuthFailure(message: string, redirectTo: string) {
+  const normalizedMessage = message.toLowerCase();
+
+  if (
+    normalizedMessage.includes("redirect") ||
+    normalizedMessage.includes("not allowed")
+  ) {
+    return {
+      message: `Supabase rejected the magic-link redirect. Add this callback to Supabase Auth redirect URLs: ${redirectTo}`,
+      status: 502,
+    };
+  }
+
+  if (
+    normalizedMessage.includes("rate limit") ||
+    normalizedMessage.includes("too many")
+  ) {
+    return {
+      message:
+        "Email rate limit exceeded. Please wait about 60 seconds before requesting another secure report link.",
+      status: 429,
+    };
+  }
+
+  if (
+    normalizedMessage.includes("email") ||
+    normalizedMessage.includes("smtp") ||
+    normalizedMessage.includes("rate limit")
+  ) {
+    return {
+      message: `Supabase could not send the magic-link email: ${message}`,
+      status: 502,
+    };
+  }
+
+  return {
+    message: `Supabase could not create the magic link: ${message}`,
+    status: 502,
+  };
+}
 
 export async function POST(
   request: Request,
@@ -35,6 +93,36 @@ export async function POST(
     }
 
     const email = body.email.trim().toLowerCase();
+    const accessConfig = getReportAccessConfig();
+
+    if (!shouldSendMagicLink(accessConfig)) {
+      try {
+        const capture = await captureReportLead({
+          reportId,
+          claimToken: body.claimToken,
+          email,
+        });
+
+        return NextResponse.json({
+          ok: true,
+          captured: capture.captured,
+          message: capture.captured
+            ? "Report unlocked. You can download it now."
+            : "Report unlocked. Download is ready.",
+        });
+      } catch (captureError) {
+        if (!canFailOpen(accessConfig)) {
+          throw captureError;
+        }
+
+        return NextResponse.json({
+          ok: true,
+          captured: false,
+          message: "Report unlocked. Download is ready.",
+        });
+      }
+    }
+
     await markReportUnlockIntent({
       reportId,
       claimToken: body.claimToken,
@@ -57,7 +145,8 @@ export async function POST(
     });
 
     if (error) {
-      throw new Error(error.message);
+      const authFailure = getMagicLinkAuthFailure(error.message, emailRedirectTo);
+      throw new ReportUnlockError(authFailure.message, authFailure.status);
     }
 
     return NextResponse.json({
@@ -72,7 +161,7 @@ export async function POST(
             ? error.message
             : "Unable to send secure report link.",
       },
-      { status: 500 },
+      { status: error instanceof ReportUnlockError ? error.status : 500 },
     );
   }
 }

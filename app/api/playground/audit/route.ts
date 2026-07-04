@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 
+import { getReportAccessConfig } from "@/lib/reports/access";
 import { auditUrl, createDownloads } from "@/lib/siteops/audit";
 import { createSingleReportPreview } from "@/lib/reports/preview";
-import { storeAuditReport } from "@/lib/reports/storage";
+import { storeAuditReportBestEffort } from "@/lib/reports/storage";
 import type { GatedReportResponse } from "@/lib/reports/types";
 
 export const runtime = "nodejs";
@@ -17,7 +18,7 @@ export async function POST(request: Request) {
     const report = await auditUrl(body.url);
     const downloads = createDownloads(report);
     const preview = createSingleReportPreview(report);
-    const storedReport = await storeAuditReport({
+    const storedReport = await storeAuditReportBestEffort({
       kind: "single",
       targetUrl: report.url,
       preview,
@@ -27,6 +28,9 @@ export async function POST(request: Request) {
     const payload: GatedReportResponse = {
       ...storedReport,
       preview,
+      access: getReportAccessConfig(),
+      report,
+      downloads,
     };
 
     return NextResponse.json(payload);

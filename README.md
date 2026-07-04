@@ -47,15 +47,43 @@ Deploy on [Vercel](https://vercel.com) or any Node host. For static export, add 
 | `NEXT_PUBLIC_INSTALL_CMD` | Install command shown in hero and CTA |
 | `NEXT_PUBLIC_OVERVIEW_IMAGE_URL` | Terminal screenshot URL |
 
-## Supabase report unlocks
+## Report unlocks
 
-The AI visibility audit flow stores completed reports in Supabase and returns a
-limited preview until the visitor unlocks the report with email or Google.
+The AI visibility audit flow returns a focused preview first, then unlocks the
+full report based on feature flags. The MVP mode captures email and unlocks
+downloads immediately without sending magic-link email.
 
 1. Create a Supabase Cloud project.
 2. Run [`supabase/audit-reports.sql`](supabase/audit-reports.sql) in the SQL editor.
-3. Enable Email magic links and, optionally, Google OAuth in Supabase Auth.
-4. Add redirect URLs for local development:
+3. Add environment variables:
+
+| Variable | Purpose |
+|----------|---------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable/anon key |
+| `SUPABASE_SECRET_KEY` | Supabase service role key for trusted server routes |
+| `NEXT_PUBLIC_REPORT_ACCESS_MODE` | `open`, `email_capture`, `google_login`, or `magic_link` |
+| `REPORT_STORAGE_MODE` | `disabled`, `best_effort`, or `required` |
+| `REPORT_CAPTURE_FAIL_MODE` | `open` or `closed` |
+| `NEXT_PUBLIC_ENABLE_GOOGLE_AUTH` | Set to `true` after Google OAuth is configured |
+| `NEXT_PUBLIC_SITE_URL` | Production origin used by optional magic-link redirects |
+
+Recommended MVP settings:
+
+```text
+NEXT_PUBLIC_REPORT_ACCESS_MODE=email_capture
+REPORT_STORAGE_MODE=best_effort
+REPORT_CAPTURE_FAIL_MODE=open
+NEXT_PUBLIC_ENABLE_GOOGLE_AUTH=false
+```
+
+Use `NEXT_PUBLIC_REPORT_ACCESS_MODE=open` as the emergency fallback when you want
+reports to download without email capture. Use `REPORT_STORAGE_MODE=disabled`
+for demos or local work that should not touch Supabase.
+
+Magic-link mode is optional. If you enable `NEXT_PUBLIC_REPORT_ACCESS_MODE=magic_link`,
+enable Email magic links in Supabase Auth and add redirect URLs for local
+development:
 
 ```text
 http://localhost:3000/auth/confirm
@@ -70,17 +98,3 @@ https://your-production-domain.com
 https://your-production-domain.com/auth/confirm
 https://your-production-domain.com/tools/geo-audit/report
 ```
-
-5. Add environment variables:
-
-| Variable | Purpose |
-|----------|---------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable/anon key |
-| `SUPABASE_SECRET_KEY` | Supabase service role key for trusted server routes |
-| `NEXT_PUBLIC_SITE_URL` | Local or production origin used in magic-link redirects |
-| `NEXT_PUBLIC_ENABLE_GOOGLE_AUTH` | Set to `true` after Google OAuth is configured |
-
-On Vercel, `NEXT_PUBLIC_SITE_URL` must be the production origin, for example
-`https://your-production-domain.com`. If it is missing or set to localhost,
-Supabase emails can redirect users to the wrong site.
