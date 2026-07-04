@@ -9,6 +9,36 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
+class ReportUnlockError extends Error {
+  constructor(
+    message: string,
+    readonly status = 500,
+  ) {
+    super(message);
+  }
+}
+
+function formatMagicLinkAuthError(message: string, redirectTo: string) {
+  const normalizedMessage = message.toLowerCase();
+
+  if (
+    normalizedMessage.includes("redirect") ||
+    normalizedMessage.includes("not allowed")
+  ) {
+    return `Supabase rejected the magic-link redirect. Add this callback to Supabase Auth redirect URLs: ${redirectTo}`;
+  }
+
+  if (
+    normalizedMessage.includes("email") ||
+    normalizedMessage.includes("smtp") ||
+    normalizedMessage.includes("rate limit")
+  ) {
+    return `Supabase could not send the magic-link email: ${message}`;
+  }
+
+  return `Supabase could not create the magic link: ${message}`;
+}
+
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ reportId: string }> },
@@ -57,7 +87,10 @@ export async function POST(
     });
 
     if (error) {
-      throw new Error(error.message);
+      throw new ReportUnlockError(
+        formatMagicLinkAuthError(error.message, emailRedirectTo),
+        502,
+      );
     }
 
     return NextResponse.json({
@@ -72,7 +105,7 @@ export async function POST(
             ? error.message
             : "Unable to send secure report link.",
       },
-      { status: 500 },
+      { status: error instanceof ReportUnlockError ? error.status : 500 },
     );
   }
 }

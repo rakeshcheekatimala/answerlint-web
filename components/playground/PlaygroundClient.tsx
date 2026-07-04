@@ -599,8 +599,9 @@ function UnlockReportPanel({
     setError("");
 
     startSending(async () => {
+      const endpoint = `/api/reports/${reportId}/unlock`;
       try {
-        const response = await fetch(`/api/reports/${reportId}/unlock`, {
+        const response = await fetch(endpoint, {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ email, claimToken }),
@@ -617,7 +618,7 @@ function UnlockReportPanel({
       } catch (sendError) {
         setError(
           sendError instanceof Error
-            ? sendError.message
+            ? formatRequestError(sendError, endpoint)
             : "Unable to send report link.",
         );
       }
@@ -753,6 +754,14 @@ function readApiError(payload: unknown, fallback: string) {
   }
 
   return fallback;
+}
+
+function formatRequestError(error: Error, endpoint: string) {
+  if (error instanceof TypeError && error.message === "Failed to fetch") {
+    return `Unable to reach the report unlock endpoint at ${endpoint}. Refresh the page and try again.`;
+  }
+
+  return error.message;
 }
 
 async function readJsonResponse(response: Response) {
