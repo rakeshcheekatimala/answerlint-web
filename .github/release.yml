@@ -1,0 +1,38 @@
+changelog:
+  exclude:
+    labels:
+      - no-release-note
+    authors:
+      - dependabot
+      - dependabot[bot]
+  categories:
+    - title: Features
+      labels:
+        - type: feature
+        - feature
+        - enhancement
+    - title: Fixes
+      labels:
+        - type: fix
+        - bug
+        - fix
+    - title: UX and Content
+      labels:
+        - type: ux
+        - ux
+        - copy
+        - design
+    - title: Documentation
+      labels:
+        - type: docs
+        - documentation
+        - docs
+    - title: Infrastructure
+      labels:
+        - type: infra
+        - ci
+        - dependencies
+        - infra
+    - title: Other Changes
+      labels:
+        - "*"

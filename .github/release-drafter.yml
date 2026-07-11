@@ -1,0 +1,67 @@
+name-template: "v$RESOLVED_VERSION"
+tag-template: "v$RESOLVED_VERSION"
+tag-prefix: "v"
+template: |
+  ## Summary
+
+  $CHANGES
+
+  ## Contributors
+
+  $CONTRIBUTORS
+categories:
+  - title: "Features"
+    labels:
+      - "type: feature"
+      - "feature"
+      - "enhancement"
+  - title: "Fixes"
+    labels:
+      - "type: fix"
+      - "bug"
+      - "fix"
+  - title: "UX and Content"
+    labels:
+      - "type: ux"
+      - "ux"
+      - "copy"
+      - "design"
+  - title: "Documentation"
+    labels:
+      - "type: docs"
+      - "documentation"
+      - "docs"
+  - title: "Infrastructure"
+    labels:
+      - "type: infra"
+      - "ci"
+      - "dependencies"
+      - "infra"
+  - title: "Other Changes"
+    labels:
+      - "*"
+exclude-labels:
+  - "no-release-note"
+change-template: "- $TITLE by @$AUTHOR in #$NUMBER"
+change-title-escapes: '\<*_&'
+version-resolver:
+  major:
+    labels:
+      - "breaking-change"
+      - "semver-major"
+  minor:
+    labels:
+      - "type: feature"
+      - "feature"
+      - "enhancement"
+      - "semver-minor"
+  patch:
+    labels:
+      - "type: fix"
+      - "bug"
+      - "fix"
+      - "type: ux"
+      - "type: docs"
+      - "type: infra"
+      - "semver-patch"
+  default: patch
