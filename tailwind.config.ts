@@ -21,6 +21,9 @@ export default {
         "accent-fg": "var(--color-accent-fg)",
         wash: "var(--color-wash)",
         card: "var(--color-card)",
+        "score-high": "var(--score-high)",
+        "score-mid": "var(--score-mid)",
+        "score-low": "var(--score-low)",
       },
       boxShadow: {
         soft: "var(--shadow-soft)",

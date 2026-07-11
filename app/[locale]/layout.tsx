@@ -1,7 +1,7 @@
 import "../globals.css";
 
 import type { Metadata } from "next";
-import { Source_Serif_4, Source_Sans_3 } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -12,14 +12,14 @@ import { routing } from "@/i18n/routing";
 
 const AUTHOR_PROFILE = "https://github.com/rakeshcheekatimala";
 
-const display = Source_Serif_4({
-  variable: "--font-display",
+const sans = Geist({
+  variable: "--font-sans",
   subsets: ["latin"],
   display: "swap",
 });
 
-const sans = Source_Sans_3({
-  variable: "--font-sans",
+const mono = Geist_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
   display: "swap",
 });
@@ -92,7 +92,7 @@ export default async function LocaleLayout({ children, params }: Props) {
   return (
     <html
       lang={locale}
-      className={`${display.variable} ${sans.variable} scroll-smooth`}
+      className={`${sans.variable} ${mono.variable} scroll-smooth`}
     >
       <body className="min-h-screen antialiased">
         <a

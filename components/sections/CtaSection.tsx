@@ -7,12 +7,12 @@ export async function CtaSection() {
   const t = await getTranslations("Cta");
 
   return (
-    <section className="bg-gradient-to-b from-paper to-paper-muted py-16 sm:py-28">
+    <section className="bg-paper py-28 sm:py-32 lg:py-40">
       <div className="safe-pad mx-auto max-w-content text-center sm:px-6 lg:px-8">
-        <h2 className="font-display text-balance text-2xl font-semibold tracking-tight text-ink sm:text-4xl">
+        <h2 className="font-display text-balance text-4xl font-semibold leading-tight tracking-normal text-ink">
           {t("title")}
         </h2>
-        <p className="mx-auto mt-6 max-w-2xl text-base text-ink-muted sm:text-lg">
+        <p className="mx-auto mt-6 max-w-[60ch] text-base leading-[1.6] text-ink-muted sm:text-lg">
           {t("subtitle")}
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">

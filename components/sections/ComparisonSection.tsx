@@ -1,66 +1,163 @@
 import { getTranslations } from "next-intl/server";
 
+type Feature = {
+  label: string;
+  citeops: string;
+  manual: string;
+  generic: string;
+  manualPass: boolean;
+  genericPass: boolean;
+};
+
 export async function ComparisonSection() {
   const t = await getTranslations("Comparison");
 
-  const rows = [
-    [t("row1Label"), t("row1CiteOps"), t("row1Manual"), t("row1Generic")],
-    [t("row2Label"), t("row2CiteOps"), t("row2Manual"), t("row2Generic")],
-    [t("row3Label"), t("row3CiteOps"), t("row3Manual"), t("row3Generic")],
-    [t("row4Label"), t("row4CiteOps"), t("row4Manual"), t("row4Generic")],
+  const features: Feature[] = [
+    {
+      label: t("row1Label"),
+      citeops: t("row1CiteOps"),
+      manual: t("row1Manual"),
+      generic: t("row1Generic"),
+      manualPass: false,
+      genericPass: false,
+    },
+    {
+      label: t("row2Label"),
+      citeops: t("row2CiteOps"),
+      manual: t("row2Manual"),
+      generic: t("row2Generic"),
+      manualPass: false,
+      genericPass: false,
+    },
+    {
+      label: t("row3Label"),
+      citeops: t("row3CiteOps"),
+      manual: t("row3Manual"),
+      generic: t("row3Generic"),
+      manualPass: false,
+      genericPass: false,
+    },
+    {
+      label: t("row4Label"),
+      citeops: t("row4CiteOps"),
+      manual: t("row4Manual"),
+      generic: t("row4Generic"),
+      manualPass: true,
+      genericPass: true,
+    },
   ];
 
   return (
     <section
       id="comparison"
-      className="scroll-mt-24 border-b border-border bg-paper py-16 sm:py-24"
+      className="scroll-mt-24 border-b border-border bg-paper py-28 sm:py-32 lg:py-40"
     >
       <div className="safe-pad mx-auto max-w-content sm:px-6 lg:px-8">
         <div className="max-w-3xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-accent">
+          <p className="text-xs font-bold uppercase tracking-[0.1em] text-ink-subtle">
             {t("eyebrow")}
           </p>
-          <h2 className="mt-4 font-display text-2xl font-semibold tracking-tight text-ink sm:text-4xl">
+          <h2 className="mt-4 font-display text-4xl font-semibold leading-tight tracking-normal text-ink">
             {t("title")}
           </h2>
-          <p className="mt-4 text-base leading-relaxed text-ink-muted sm:text-lg">
+          <p className="mt-4 max-w-[60ch] text-base leading-[1.6] text-ink-muted sm:text-lg">
             {t("subtitle")}
           </p>
         </div>
 
-        <div className="mt-8 overflow-x-auto rounded-[28px] border border-border bg-card shadow-soft">
-          <table className="min-w-full border-collapse text-left text-sm">
-            <thead className="bg-paper-muted">
-              <tr>
-                {[t("col1"), t("col2"), t("col3"), t("col4")].map((heading) => (
-                  <th
-                    key={heading}
-                    className="px-4 py-4 font-semibold text-ink sm:px-6"
-                  >
-                    {heading}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row[0]} className="border-t border-border">
-                  {row.map((cell, index) => (
-                    <td
-                      key={`${row[0]}-${index}`}
-                      className={`px-4 py-4 align-top leading-7 sm:px-6 ${
-                        index === 1 ? "font-medium text-ink" : "text-ink-muted"
-                      }`}
-                    >
-                      {cell}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="mt-12 grid gap-px border border-border bg-border lg:grid-cols-3">
+          <ComparisonColumn
+            heading={t("col2")}
+            label="Deterministic release tool"
+            featured
+            features={features.map((feature) => ({
+              title: feature.label,
+              body: feature.citeops,
+              pass: true,
+            }))}
+          />
+          <ComparisonColumn
+            heading={t("col3")}
+            label="Human review"
+            features={features.map((feature) => ({
+              title: feature.label,
+              body: feature.manual,
+              pass: feature.manualPass,
+            }))}
+          />
+          <ComparisonColumn
+            heading={t("col4")}
+            label="Prompted summary"
+            features={features.map((feature) => ({
+              title: feature.label,
+              body: feature.generic,
+              pass: feature.genericPass,
+            }))}
+          />
         </div>
       </div>
     </section>
+  );
+}
+
+function ComparisonColumn({
+  heading,
+  label,
+  features,
+  featured = false,
+}: {
+  heading: string;
+  label: string;
+  features: { title: string; body: string; pass: boolean }[];
+  featured?: boolean;
+}) {
+  return (
+    <article className={`${featured ? "bg-[#0a0a0a] text-white" : "bg-card text-ink"} p-5 sm:p-6`}>
+      <p
+        className={`text-xs font-bold uppercase tracking-[0.1em] ${
+          featured ? "text-score-high" : "text-ink-subtle"
+        }`}
+      >
+        {label}
+      </p>
+      <h3 className="mt-3 text-2xl font-semibold">{heading}</h3>
+      <div className="mt-6 grid gap-3">
+        {features.map((feature) => (
+          <div
+            key={feature.title}
+            className={`border p-4 ${
+              featured
+                ? "border-white/10 bg-white/[0.04]"
+                : "border-border bg-paper"
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <span
+                className={`grid h-6 w-6 shrink-0 place-items-center border font-mono text-sm font-semibold ${
+                  feature.pass
+                    ? featured
+                      ? "border-score-high text-score-high"
+                      : "border-ink text-ink"
+                    : "border-score-low text-score-low"
+                }`}
+                aria-hidden="true"
+              >
+                {feature.pass ? "✓" : "×"}
+              </span>
+              <div>
+                <p className="text-sm font-semibold">{feature.title}</p>
+                <p
+                  className={`mt-2 max-w-[60ch] text-sm leading-[1.6] ${
+                    featured ? "text-white/62" : "text-ink-muted"
+                  }`}
+                >
+                  {feature.body}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </article>
   );
 }
