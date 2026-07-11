@@ -13,17 +13,17 @@ export async function FaqSection() {
   return (
     <section
       id="faq"
-      className="scroll-mt-24 border-b border-border bg-wash py-16 sm:py-24"
+      className="scroll-mt-24 border-b border-border bg-wash py-28 sm:py-32 lg:py-40"
     >
       <div className="safe-pad mx-auto max-w-content sm:px-6 lg:px-8">
         <div className="max-w-3xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-accent">
+          <p className="text-xs font-bold uppercase tracking-[0.1em] text-ink-subtle">
             {t("eyebrow")}
           </p>
-          <h2 className="mt-4 font-display text-2xl font-semibold tracking-tight text-ink sm:text-4xl">
+          <h2 className="mt-4 font-display text-4xl font-semibold leading-tight tracking-normal text-ink">
             {t("title")}
           </h2>
-          <p className="mt-4 text-base leading-relaxed text-ink-muted sm:text-lg">
+          <p className="mt-4 max-w-[60ch] text-base leading-[1.6] text-ink-muted sm:text-lg">
             {t("subtitle")}
           </p>
         </div>
@@ -32,12 +32,12 @@ export async function FaqSection() {
           {faqs.map((faq) => (
             <article
               key={faq.q}
-              className="rounded-[24px] border border-border bg-card p-5 shadow-soft sm:p-6"
+              className="border border-border bg-card p-5 sm:p-6"
             >
               <h3 className="font-display text-xl font-semibold text-ink">
                 {faq.q}
               </h3>
-              <p className="mt-3 text-base leading-8 text-ink-muted">{faq.a}</p>
+              <p className="mt-3 max-w-[60ch] text-base leading-[1.6] text-ink-muted">{faq.a}</p>
             </article>
           ))}
         </div>

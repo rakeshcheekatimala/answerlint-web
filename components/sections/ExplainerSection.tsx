@@ -8,13 +8,13 @@ export async function ExplainerSection() {
   const t = await getTranslations("Explainer");
 
   return (
-    <section className="border-b border-border bg-paper py-14 sm:py-20">
+    <section className="border-b border-border bg-paper py-28 sm:py-32 lg:py-40">
       <div className="safe-pad mx-auto max-w-content sm:px-6 lg:px-8">
         <div className="max-w-3xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-accent">
+          <p className="text-xs font-bold uppercase tracking-[0.1em] text-ink-subtle">
             {t("eyebrow")}
           </p>
-          <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight text-ink sm:text-5xl">
+          <h2 className="mt-4 font-display text-4xl font-semibold leading-tight tracking-normal text-ink">
             {t("title")}
           </h2>
          
@@ -48,13 +48,13 @@ export async function ExplainerSection() {
             href={branding.explainerImageUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex w-full items-center justify-center rounded-full border border-border-strong bg-card px-6 py-3 text-sm font-semibold text-ink transition hover:border-accent hover:text-accent sm:w-auto"
+            className="inline-flex w-full items-center justify-center border border-border-strong bg-card px-6 py-3 text-sm font-semibold text-ink transition hover:border-accent hover:text-accent sm:w-auto"
           >
             {t("openImage")}
           </a>
           <Link
             href="/playground"
-            className="inline-flex w-full items-center justify-center rounded-full bg-ink px-6 py-3 text-sm font-semibold text-wash transition hover:bg-ink-muted sm:w-auto"
+            className="inline-flex w-full items-center justify-center bg-ink px-6 py-3 text-sm font-semibold text-wash transition hover:bg-ink-muted sm:w-auto"
           >
             {t("cta")}
           </Link>

@@ -9,19 +9,19 @@ export async function ActionSection() {
   return (
     <section
       id="action"
-      className="scroll-mt-24 border-b border-border bg-wash py-16 sm:py-24"
+      className="scroll-mt-24 border-b border-border bg-wash py-28 sm:py-32 lg:py-40"
     >
       <div className="safe-pad mx-auto max-w-content sm:px-6 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-accent">
+            <p className="text-xs font-bold uppercase tracking-[0.1em] text-ink-subtle">
               Ship workflow
             </p>
-            <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight text-ink sm:text-5xl">
+            <h2 className="mt-4 font-display text-4xl font-semibold leading-tight tracking-normal text-ink">
               {t("title")}
             </h2>
           </div>
-          <p className="max-w-2xl text-base leading-8 text-ink-muted sm:text-lg">{t("subtitle")}</p>
+          <p className="max-w-[60ch] text-base leading-[1.6] text-ink-muted sm:text-lg">{t("subtitle")}</p>
         </div>
 
         <div className="mt-10 grid gap-6 lg:grid-cols-2 lg:items-stretch lg:gap-8">
@@ -30,7 +30,7 @@ export async function ActionSection() {
               <span className="h-2.5 w-2.5 rounded-full bg-[#ff6b65]" />
               <span className="h-2.5 w-2.5 rounded-full bg-[#f4c358]" />
               <span className="h-2.5 w-2.5 rounded-full bg-accent" />
-              <span className="ml-2 text-xs font-semibold uppercase tracking-[0.18em] text-white/70">
+              <span className="ml-2 text-xs font-bold uppercase tracking-[0.1em] text-white/70">
                 citeops overview
               </span>
             </div>
@@ -45,7 +45,7 @@ export async function ActionSection() {
           </div>
           <div className="min-w-0 border border-border bg-card shadow-soft">
             <div className="border-b border-border p-5 sm:p-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-subtle">
+              <p className="text-xs font-bold uppercase tracking-[0.1em] text-ink-subtle">
                 {t("codeCaption")}
               </p>
               <pre className="mt-4 max-w-full overflow-x-auto border border-border bg-[#0b1210] p-4 text-sm leading-relaxed text-emerald-100">
@@ -58,7 +58,7 @@ export async function ActionSection() {
               {[t("detail1"), t("detail2"), t("detail3")].map((item) => (
                 <p
                   key={item}
-                  className="bg-card px-5 py-4 text-sm leading-7 text-ink-muted sm:px-6"
+                  className="bg-card px-5 py-4 text-sm leading-[1.6] text-ink-muted sm:px-6"
                 >
                   {item}
                 </p>

@@ -13,16 +13,16 @@ export async function HowSection() {
   return (
     <section
       id="how"
-      className="scroll-mt-24 border-b border-border bg-paper py-16 sm:py-24"
+      className="scroll-mt-24 border-b border-border bg-paper py-28 sm:py-32 lg:py-40"
     >
       <div className="safe-pad mx-auto max-w-content sm:px-6 lg:px-8">
-        <p className="text-sm font-semibold uppercase tracking-[0.22em] text-accent">
+        <p className="text-xs font-bold uppercase tracking-[0.1em] text-ink-subtle">
           Audit path
         </p>
-        <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight text-ink sm:text-5xl">
+        <h2 className="mt-4 font-display text-4xl font-semibold leading-tight tracking-normal text-ink">
           {t("title")}
         </h2>
-        <p className="mt-4 max-w-2xl text-base leading-8 text-ink-muted sm:text-lg">{t("subtitle")}</p>
+        <p className="mt-4 max-w-[60ch] text-base leading-[1.6] text-ink-muted sm:text-lg">{t("subtitle")}</p>
         <ol className="mt-10 grid gap-px overflow-hidden border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
           {steps.map((step, i) => (
             <li key={step.title} className="relative bg-card p-5">
@@ -32,7 +32,7 @@ export async function HowSection() {
               <h3 className="mt-3 text-lg font-semibold text-ink">
                 {step.title}
               </h3>
-              <p className="mt-3 text-sm leading-relaxed text-ink-muted">
+              <p className="mt-3 max-w-[60ch] text-sm leading-[1.6] text-ink-muted">
                 {step.body}
               </p>
             </li>
