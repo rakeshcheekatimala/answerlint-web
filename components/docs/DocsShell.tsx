@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { CodeCopyBlock } from "@/components/CodeCopyBlock";
 import type { DocsGroup, DocsPage } from "@/lib/docs";
 
 type Props = {
@@ -93,14 +94,13 @@ export function DocsShell({ groups, page }: Props) {
                   );
                 case "code":
                   return (
-                    <pre
+                    <CodeCopyBlock
                       key={index}
-                      className="max-w-full overflow-x-auto rounded-[24px] border border-border bg-paper-muted p-5 text-sm leading-7 text-ink"
-                    >
-                      <code className="block w-max min-w-full whitespace-pre">
-                        {block.code}
-                      </code>
-                    </pre>
+                      code={block.code}
+                      label="Command"
+                      className="rounded-[8px]"
+                      minHeightClassName="min-h-[6rem]"
+                    />
                   );
                 case "list":
                   return (

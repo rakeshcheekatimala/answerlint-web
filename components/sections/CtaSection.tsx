@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
+import { CodeCopyBlock } from "@/components/CodeCopyBlock";
 import { branding } from "@/config/branding";
 
 export async function CtaSection() {
@@ -49,8 +50,12 @@ export async function CtaSection() {
             {t("ctaDocs")}
           </a>
         </div>
-        <div className="mt-10 rounded-xl border border-border bg-card px-4 py-4 shadow-soft sm:mx-auto sm:inline-block sm:px-6">
-          <code className="block overflow-x-auto font-mono text-sm text-ink">{branding.installCommand}</code>
+        <div className="mx-auto mt-10 max-w-xl text-left">
+          <CodeCopyBlock
+            code={branding.installCommand}
+            label="Install"
+            minHeightClassName="min-h-[4.75rem]"
+          />
         </div>
       </div>
     </section>

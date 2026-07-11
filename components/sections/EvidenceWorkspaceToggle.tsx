@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { CodeCopyBlock } from "@/components/CodeCopyBlock";
+
 type View = "business" | "developer";
 
 export function EvidenceWorkspaceToggle({
@@ -145,16 +147,7 @@ function BusinessReport() {
 }
 
 function DeveloperReport() {
-  return (
-    <div className="grid h-full gap-4">
-      <div className="border border-white/10 bg-[#050505]">
-        <div className="border-b border-white/10 px-4 py-3">
-          <p className="text-xs font-bold uppercase tracking-[0.1em] text-white/40">
-            Terminal output
-          </p>
-        </div>
-        <pre className="overflow-x-auto p-4 font-mono text-xs leading-6 text-score-high">
-          <code>{`$ llm-citeops audit --url "$DEPLOY_URL" --ci
+  const terminalOutput = `$ llm-citeops audit --url "$DEPLOY_URL" --ci
 composite 82  floor 70  status pass
 aeo       88  answer blocks detected
 geo       76  trust signals incomplete
@@ -162,9 +155,15 @@ geo       76  trust signals incomplete
 fix queued:
 - add FAQPage or HowTo JSON-LD
 - expose author + dateModified
-- add outbound citations to claims`}</code>
-        </pre>
-      </div>
+- add outbound citations to claims`;
+
+  return (
+    <div className="grid h-full gap-4">
+      <CodeCopyBlock
+        code={terminalOutput}
+        label="Terminal output"
+        minHeightClassName="min-h-[13.5rem]"
+      />
 
       <div className="border border-white/10 bg-[#050505]">
         <div className="border-b border-white/10 px-4 py-3">

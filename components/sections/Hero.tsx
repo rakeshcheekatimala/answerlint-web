@@ -123,8 +123,17 @@ export async function Hero() {
             </div>
           </div>
 
-          <div className="border border-white/10 bg-white/[0.035] p-3">
-            <div className="border border-white/10 bg-[#050505]">
+          <div className="relative">
+            <div
+              className="pointer-events-none absolute -inset-8"
+              style={{
+                background:
+                  "radial-gradient(circle at center, rgba(204, 255, 0, 0.11) 0%, transparent 70%)",
+              }}
+              aria-hidden="true"
+            />
+            <div className="relative border border-white/10 bg-white/[0.035] p-3">
+              <div className="border border-white/10 bg-[#050505]">
               <div className="flex flex-col gap-4 border-b border-white/10 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.1em] text-white/40">
@@ -215,6 +224,7 @@ export async function Hero() {
                   </div>
                 ))}
               </div>
+            </div>
             </div>
           </div>
         </div>

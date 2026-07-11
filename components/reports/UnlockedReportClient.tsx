@@ -9,6 +9,7 @@ import type {
   SiteOpsComparisonReport,
   SiteOpsReport,
 } from "@/lib/siteops/types";
+import { CodeCopyBlock } from "@/components/CodeCopyBlock";
 
 type DownloadFormat = "json" | "html" | "csv";
 
@@ -437,11 +438,12 @@ function AuditList({
                   {audit.recommendation.instruction}
                 </p>
                 {audit.recommendation.code_snippet ? (
-                  <pre className="mt-4 max-w-full overflow-x-auto rounded-[18px] bg-ink p-4 text-sm leading-6 text-paper">
-                    <code className="block w-max min-w-full whitespace-pre">
-                      {audit.recommendation.code_snippet}
-                    </code>
-                  </pre>
+                  <CodeCopyBlock
+                    code={audit.recommendation.code_snippet}
+                    label="Fix snippet"
+                    className="mt-4"
+                    minHeightClassName="min-h-[6rem]"
+                  />
                 ) : null}
               </div>
             ) : null}

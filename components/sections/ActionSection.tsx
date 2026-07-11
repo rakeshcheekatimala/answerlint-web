@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 
+import { CodeCopyBlock } from "@/components/CodeCopyBlock";
 import { branding } from "@/config/branding";
 
 export async function ActionSection() {
@@ -45,14 +46,12 @@ export async function ActionSection() {
           </div>
           <div className="min-w-0 border border-border bg-card shadow-soft">
             <div className="border-b border-border p-5 sm:p-6">
-              <p className="text-xs font-bold uppercase tracking-[0.1em] text-ink-subtle">
-                {t("codeCaption")}
-              </p>
-              <pre className="mt-4 max-w-full overflow-x-auto border border-border bg-[#0b1210] p-4 text-sm leading-relaxed text-emerald-100">
-                <code className="block w-max min-w-full whitespace-pre">
-                  {t("codeBlock")}
-                </code>
-              </pre>
+              <CodeCopyBlock
+                code={t("codeBlock")}
+                label={t("codeCaption")}
+                minHeightClassName="min-h-[9.5rem]"
+              />
+              <PipelineGraphic />
             </div>
             <div className="grid gap-px bg-border">
               {[t("detail1"), t("detail2"), t("detail3")].map((item) => (
@@ -68,5 +67,45 @@ export async function ActionSection() {
         </div>
       </div>
     </section>
+  );
+}
+
+function PipelineGraphic() {
+  const steps = [
+    { label: "Commit", detail: "content change" },
+    { label: "GitHub Action", detail: "preview URL" },
+    { label: "llm-citeops runs", detail: "AEO + GEO gate" },
+    { label: "PR Blocked", detail: "GEO score < 90" },
+  ];
+
+  return (
+    <div className="mt-5 border border-border bg-paper">
+      <div className="border-b border-border px-4 py-3">
+        <p className="text-xs font-bold uppercase tracking-[0.1em] text-ink-subtle">
+          CI/CD release gate
+        </p>
+      </div>
+      <div className="grid gap-px bg-border md:grid-cols-4">
+        {steps.map((step, index) => (
+          <div key={step.label} className="relative bg-card p-4">
+            {index < steps.length - 1 ? (
+              <span
+                className="absolute right-[-0.7rem] top-1/2 z-10 hidden h-5 w-5 -translate-y-1/2 rotate-45 border-r border-t border-border bg-card md:block"
+                aria-hidden="true"
+              />
+            ) : null}
+            <p
+              className={`font-mono text-xs font-semibold ${
+                index === steps.length - 1 ? "text-score-low" : "text-ink-subtle"
+              }`}
+            >
+              {String(index + 1).padStart(2, "0")}
+            </p>
+            <h3 className="mt-2 text-sm font-semibold text-ink">{step.label}</h3>
+            <p className="mt-1 text-xs leading-5 text-ink-muted">{step.detail}</p>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

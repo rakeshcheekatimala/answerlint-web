@@ -36,7 +36,7 @@ export function ScoreGauge({ label, value, helper }: ScoreGaugeProps) {
     : `${label} score ${safeValue} out of 100`;
 
   return (
-    <div className="min-w-0 rounded-[20px] border border-border bg-card p-5 text-center">
+    <div className="min-h-[17rem] min-w-0 rounded-[20px] border border-border bg-card p-5 text-center">
       <div
         role="img"
         aria-label={ariaLabel}

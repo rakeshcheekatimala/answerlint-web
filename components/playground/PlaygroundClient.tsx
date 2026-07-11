@@ -20,14 +20,6 @@ const scoreTone: Record<string, string> = {
   poor: "bg-rose-100 text-rose-800",
 };
 
-const auditProgressSteps = [
-  "Fetching HTML and checking response metadata",
-  "Parsing headings, copy, links, and JSON-LD",
-  "Scoring AEO structure and answer readiness",
-  "Scoring GEO trust, freshness, and citation signals",
-  "Preparing priority fixes and export data",
-];
-
 export function PlaygroundClient({ initialUrl = "" }: { initialUrl?: string }) {
   const [url, setUrl] = useState(initialUrl);
   const [competitorUrl, setCompetitorUrl] = useState("");
@@ -192,7 +184,7 @@ export function PlaygroundClient({ initialUrl = "" }: { initialUrl?: string }) {
           </form>
 
           {isAuditing || isComparing ? (
-            <AuditProgress
+            <AuditSkeleton
               title={isComparing ? "Comparing pages" : "Running SiteOps audit"}
             />
           ) : null}
@@ -306,33 +298,43 @@ function AuditTrustBadges() {
   );
 }
 
-function AuditProgress({ title }: { title: string }) {
+function AuditSkeleton({ title }: { title: string }) {
   return (
     <section
       aria-live="polite"
-      className="mt-5 rounded-[24px] border border-border bg-paper-muted p-5"
+      aria-busy="true"
+      className="mt-5 min-h-[24rem] rounded-[24px] border border-border bg-paper-muted p-5"
     >
-      <div className="flex items-center gap-3">
-        <span className="h-3 w-3 rounded-full bg-accent shadow-[0_0_0_6px_rgb(8_114_83_/_0.12)]" />
+      <div className="flex items-start justify-between gap-5">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-ink-subtle">
+          <p className="text-xs font-semibold uppercase tracking-[0.1em] text-ink-subtle">
             {title}
           </p>
           <p className="mt-1 text-sm text-ink-muted">
             Building the same evidence trail the report will use.
           </p>
         </div>
+        <span className="h-9 w-24 animate-pulse rounded-full bg-border" />
       </div>
-      <div className="mt-4 grid gap-2">
-        {auditProgressSteps.map((step, index) => (
+      <div className="mt-5 grid gap-4 sm:grid-cols-3">
+        {["Composite", "AEO", "GEO"].map((label) => (
           <div
-            key={step}
-            className="flex items-center gap-3 rounded-[16px] border border-border bg-card px-3 py-2 text-sm text-ink-muted"
+            key={label}
+            className="min-h-[10.5rem] rounded-[20px] border border-border bg-card p-4"
           >
-            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent text-xs font-semibold text-accent-fg">
-              {index + 1}
-            </span>
-            <span>{step}</span>
+            <div className="mx-auto h-24 w-24 animate-pulse rounded-full bg-border" />
+            <div className="mx-auto mt-4 h-3 w-24 animate-pulse rounded-full bg-border" />
+          </div>
+        ))}
+      </div>
+      <div className="mt-5 grid gap-3">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div
+            key={index}
+            className="min-h-14 rounded-[16px] border border-border bg-card px-4 py-3"
+          >
+            <div className="h-3 w-2/3 animate-pulse rounded-full bg-border" />
+            <div className="mt-3 h-2 w-11/12 animate-pulse rounded-full bg-border" />
           </div>
         ))}
       </div>

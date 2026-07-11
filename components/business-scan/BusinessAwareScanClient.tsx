@@ -109,6 +109,14 @@ export function BusinessAwareScanClient({
     }
   }, [initialBaseUrl, initialProjectId]);
 
+  useEffect(() => {
+    if (!dashboard) return;
+
+    window.requestAnimationFrame(() => {
+      scrollToExecutiveDashboard();
+    });
+  }, [dashboard]);
+
   const scorePreview = useMemo(
     () => (project ? computeBusinessVisibilityScore(project.pages) : null),
     [project],
@@ -807,7 +815,7 @@ function Dashboard({
   const { run } = dashboard;
 
   return (
-    <section className="mt-12 space-y-8">
+    <section id="executive-dashboard" className="mt-12 scroll-mt-24 space-y-8">
       <div className="rounded-[24px] border border-border bg-ink p-5 text-white shadow-soft sm:p-6">
         <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
           <div>
@@ -1017,6 +1025,13 @@ function dedupeProjectPages(project: BusinessScanProject): BusinessScanProject {
 
 function scrollToFixes() {
   document.getElementById("fix-first")?.scrollIntoView({
+    behavior: "smooth",
+    block: "start",
+  });
+}
+
+function scrollToExecutiveDashboard() {
+  document.getElementById("executive-dashboard")?.scrollIntoView({
     behavior: "smooth",
     block: "start",
   });
