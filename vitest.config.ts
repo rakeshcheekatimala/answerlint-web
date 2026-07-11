@@ -12,6 +12,13 @@ export default defineConfig({
         "lib/reports/preview.ts",
         "lib/reports/redirects.ts",
         "lib/reports/tokens.ts",
+        "lib/business-scan/classification.ts",
+        "lib/business-scan/feature-flag.ts",
+        "lib/business-scan/recommendations.ts",
+        "lib/business-scan/scoring.ts",
+        "lib/business-scan/validation.ts",
+        "lib/net/rate-limit.ts",
+        "lib/net/url-guard.ts",
         "lib/supabase/config.ts",
       ],
       thresholds: {

@@ -212,6 +212,7 @@ export function PlaygroundClient({ initialUrl = "" }: { initialUrl?: string }) {
           {report ? (
             <div className="mt-8 space-y-8">
               <ScoreSummary report={report} />
+              <BusinessScanNextStep report={report} />
 
               {auditData ? (
                 <UnlockReportPanel data={auditData} />
@@ -407,6 +408,45 @@ function ScoreSummary({ report }: { report: SingleReportPreview }) {
       </div>
     </section>
   );
+}
+
+function BusinessScanNextStep({ report }: { report: SingleReportPreview }) {
+  const businessScanHref = `/tools/business-aware-scan?siteUrl=${encodeURIComponent(
+    getSiteOrigin(report.targetUrl),
+  )}`;
+
+  return (
+    <section className="rounded-[24px] border border-amber-200 bg-amber-50 p-5 shadow-[0_18px_45px_rgb(146_64_14_/_0.08)]">
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-800">
+            One page is only the start
+          </p>
+          <h2 className="mt-2 font-display text-2xl font-semibold text-ink">
+            Want to know which pages matter first?
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm leading-7 text-amber-950/80">
+            Business-Aware Scan maps the site into revenue, trust, developer,
+            support, and content pages, then shows the fastest visibility gains.
+          </p>
+        </div>
+        <Link
+          href={businessScanHref}
+          className="inline-flex w-full items-center justify-center rounded-full bg-ink px-5 py-3 text-sm font-semibold text-white transition hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:w-auto"
+        >
+          Map My AI Visibility
+        </Link>
+      </div>
+    </section>
+  );
+}
+
+function getSiteOrigin(value: string) {
+  try {
+    return new URL(value).origin;
+  } catch {
+    return value;
+  }
 }
 
 function PreviewIssueList({

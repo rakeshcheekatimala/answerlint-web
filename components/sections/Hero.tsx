@@ -88,23 +88,31 @@ export async function Hero() {
 
             <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:flex-wrap sm:items-center">
               <Link
+                href="/tools/business-aware-scan"
+                className="inline-flex w-full items-center justify-center rounded-full bg-[#f6c76b] px-6 py-3 text-sm font-semibold text-[#1f1605] shadow-[0_18px_44px_rgba(246,199,107,0.18)] transition-colors hover:bg-[#f1b84c] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:w-auto"
+              >
+                {t("ctaBusinessScan")}
+              </Link>
+
+              <Link
                 href="/playground"
-                className="inline-flex w-full items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-[#07110f] shadow-[0_18px_44px_rgba(0,0,0,0.22)] transition-colors hover:bg-paper-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:w-auto"
+                className="inline-flex w-full items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-[#07110f] shadow-[0_18px_44px_rgba(0,0,0,0.18)] transition-colors hover:bg-paper-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:w-auto"
               >
                 {t("ctaPlayground")}
               </Link>
 
               <a
                 href={branding.links.github}
-                className="inline-flex w-full items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-fg shadow-[0_18px_44px_rgba(15,139,104,0.18)] transition-colors hover:bg-accent-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:w-auto"
+                className="inline-flex w-full items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-fg shadow-[0_18px_44px_rgba(15,139,104,0.22)] transition-colors hover:bg-accent-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:w-auto"
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 {t("ctaGithub")}
               </a>
+
               <a
                 href={branding.links.npm}
-                className="inline-flex w-full items-center justify-center rounded-full border border-white/15 bg-white/[0.06] px-6 py-3 text-sm font-semibold text-white/82 transition-colors hover:border-white/30 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:w-auto"
+                className="inline-flex w-full items-center justify-center rounded-full border border-white/15 bg-white/[0.06] px-6 py-3 text-sm font-semibold text-white/80 transition-colors hover:border-white/30 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:w-auto"
                 target="_blank"
                 rel="noopener noreferrer"
               >

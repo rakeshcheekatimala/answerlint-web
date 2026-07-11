@@ -1,3 +1,4 @@
+import { safeFetch } from "@/lib/net/url-guard";
 import type {
   AuditResult,
   ComparisonAuditDelta,
@@ -286,33 +287,25 @@ function priorityFromImpact(scoreImpact: number) {
 }
 
 async function fetchHtml(url: string): Promise<string> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 20000);
+  const response = await safeFetch(url, {
+    timeoutMs: 20000,
+    headers: {
+      "user-agent":
+        "Mozilla/5.0 (compatible; CiteOpsPlayground/1.0; +https://www.npmjs.com/package/llm-citeops)",
+      accept: "text/html,application/xhtml+xml",
+    },
+  });
 
-  try {
-    const response = await fetch(url, {
-      signal: controller.signal,
-      headers: {
-        "user-agent":
-          "Mozilla/5.0 (compatible; CiteOpsPlayground/1.0; +https://www.npmjs.com/package/llm-citeops)",
-        accept: "text/html,application/xhtml+xml",
-      },
-      cache: "no-store",
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status} while fetching ${url}`);
-    }
-
-    const contentType = response.headers.get("content-type") ?? "";
-    if (!contentType.includes("text/html")) {
-      throw new Error(`Expected HTML but received "${contentType || "unknown"}"`);
-    }
-
-    return response.text();
-  } finally {
-    clearTimeout(timer);
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status} while fetching ${url}`);
   }
+
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentType.includes("text/html")) {
+    throw new Error(`Expected HTML but received "${contentType || "unknown"}"`);
+  }
+
+  return response.text();
 }
 
 function normalizeUrl(value: string) {

@@ -81,6 +81,26 @@ Use `NEXT_PUBLIC_REPORT_ACCESS_MODE=open` as the emergency fallback when you wan
 reports to download without email capture. Use `REPORT_STORAGE_MODE=disabled`
 for demos or local work that should not touch Supabase.
 
+## Business-Aware Scan storage
+
+Business-Aware Scan stores saved projects, curated page sets, latest scores, and
+scan history in Supabase. If you see this message:
+
+```text
+Could not find the table 'public.business_scan_projects' in the schema cache
+```
+
+run [`supabase/business-scan-projects.sql`](supabase/business-scan-projects.sql)
+in the Supabase SQL editor. The combined
+[`supabase/audit-reports.sql`](supabase/audit-reports.sql) file also includes
+this table for fresh installs.
+
+After running the SQL, the final verification query should return:
+
+```text
+public.business_scan_projects
+```
+
 Magic-link mode is optional. If you enable `NEXT_PUBLIC_REPORT_ACCESS_MODE=magic_link`,
 enable Email magic links in Supabase Auth and add redirect URLs for local
 development:
