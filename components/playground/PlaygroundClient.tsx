@@ -113,10 +113,10 @@ export function PlaygroundClient({ initialUrl = "" }: { initialUrl?: string }) {
               id="playground-title"
               className="mt-4 font-display text-3xl font-semibold tracking-tight text-ink sm:text-4xl lg:text-5xl"
             >
-              Run a zero-token SiteOps audit, then compare it with a competitor.
+              Run a zero-token AnswerLint audit, then compare it with a competitor.
             </h1>
             <p className="mt-4 text-base leading-relaxed text-ink-muted sm:text-lg">
-              Enter a URL to generate AEO and GEO scores with the SiteOps
+              Enter a URL to generate AEO and GEO scores with AnswerLint
               heuristics. The standard scan is deterministic, so you see a
               focused preview first without sending page content to a third-party
               LLM.
@@ -185,7 +185,7 @@ export function PlaygroundClient({ initialUrl = "" }: { initialUrl?: string }) {
 
           {isAuditing || isComparing ? (
             <AuditSkeleton
-              title={isComparing ? "Comparing pages" : "Running SiteOps audit"}
+              title={isComparing ? "Comparing pages" : "Running AnswerLint audit"}
             />
           ) : null}
 
@@ -229,7 +229,7 @@ export function PlaygroundClient({ initialUrl = "" }: { initialUrl?: string }) {
             <div className="mt-4 space-y-5">
               <div>
                 <h2 className="font-display text-2xl font-semibold text-ink">
-                  SiteOps only
+                  AnswerLint only
                 </h2>
                 <p className="mt-2 text-sm leading-7 text-ink-muted">
                   Non-AI analysis computes AEO, GEO, composite scoring, and
@@ -242,7 +242,7 @@ export function PlaygroundClient({ initialUrl = "" }: { initialUrl?: string }) {
                 </h2>
                 <p className="mt-2 text-sm leading-7 text-ink-muted">
                   Add a second URL and the app audits target and competitor with
-                  the same SiteOps pass, then reports deltas, edges, and first
+                  the same AnswerLint pass, then reports deltas, edges, and first
                   fixes.
                 </p>
               </div>
@@ -272,7 +272,7 @@ export function PlaygroundClient({ initialUrl = "" }: { initialUrl?: string }) {
 function AuditTrustBadges() {
   const badges = [
     {
-      label: "Zero-token SiteOps scan",
+      label: "Zero-token AnswerLint scan",
       body: "The standard audit uses deterministic checks, not an LLM prompt.",
     },
     {

@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 
 type Feature = {
   label: string;
-  citeops: string;
+  answerlint: string;
   manual: string;
   generic: string;
   manualPass: boolean;
@@ -15,7 +15,7 @@ export async function ComparisonSection() {
   const features: Feature[] = [
     {
       label: t("row1Label"),
-      citeops: t("row1CiteOps"),
+      answerlint: t("row1AnswerLint"),
       manual: t("row1Manual"),
       generic: t("row1Generic"),
       manualPass: false,
@@ -23,7 +23,7 @@ export async function ComparisonSection() {
     },
     {
       label: t("row2Label"),
-      citeops: t("row2CiteOps"),
+      answerlint: t("row2AnswerLint"),
       manual: t("row2Manual"),
       generic: t("row2Generic"),
       manualPass: false,
@@ -31,7 +31,7 @@ export async function ComparisonSection() {
     },
     {
       label: t("row3Label"),
-      citeops: t("row3CiteOps"),
+      answerlint: t("row3AnswerLint"),
       manual: t("row3Manual"),
       generic: t("row3Generic"),
       manualPass: false,
@@ -39,7 +39,7 @@ export async function ComparisonSection() {
     },
     {
       label: t("row4Label"),
-      citeops: t("row4CiteOps"),
+      answerlint: t("row4AnswerLint"),
       manual: t("row4Manual"),
       generic: t("row4Generic"),
       manualPass: true,
@@ -72,7 +72,7 @@ export async function ComparisonSection() {
             featured
             features={features.map((feature) => ({
               title: feature.label,
-              body: feature.citeops,
+              body: feature.answerlint,
               pass: true,
             }))}
           />

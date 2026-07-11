@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://llm-citeops.vercel.app/sitemap.xml
+Sitemap: https://useanswerlint.com/sitemap.xml

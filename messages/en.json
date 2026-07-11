@@ -1,10 +1,10 @@
 {
   "Metadata": {
-    "title": "CiteOps — Enterprise AEO & GEO audits for AI visibility",
-    "description": "llm-citeops scores pages for answer readiness, citation trust, and release risk. Run AEO and GEO audits from the CLI, playground, or CI."
+    "title": "AnswerLint — linting your website for AI answers",
+    "description": "AnswerLint scans websites for answer readiness, citation trust, and AI search release risk. Audit pages for ChatGPT, Gemini, Perplexity, and AI Overviews."
   },
   "branding": {
-    "logoAlt": "CiteOps wordmark"
+    "logoAlt": "AnswerLint wordmark"
   },
   "Nav": {
     "menu": "Menu",
@@ -20,17 +20,17 @@
     "npm": "npm"
   },
   "Hero": {
-    "eyebrow": "Zero-token AI visibility audits",
-    "title": "The Lighthouse for AI Search.",
-    "subtitle": "Zero-token AEO & GEO audits for ChatGPT, Perplexity, and AI Overviews.",
+    "eyebrow": "Linting your website for AI answers",
+    "title": "Lint your website before AI ignores it.",
+    "subtitle": "AnswerLint audits whether ChatGPT, Gemini, Perplexity, and AI Overviews can understand, trust, and cite your pages.",
     "questionsLead": "Know which launch pages answer the buyer question, which signals are missing, and where competitors are easier for AI systems to quote.",
     "businessLead": "Start with the business map, then inspect individual pages when you need deeper evidence.",
-    "ctaBusinessScan": "Map My AI Visibility",
+    "ctaBusinessScan": "Scan my site",
     "ctaPlayground": "Audit one page",
     "ctaCompetitor": "Competitor analysis",
-    "ctaGithub": "View on GitHub",
-    "ctaNpm": "Package on npm",
-    "installLabel": "Copy install command",
+    "ctaGithub": "View source",
+    "ctaNpm": "Package",
+    "installLabel": "Run AnswerLint",
     "pill1": "Executive visibility readout",
     "pill2": "Developer-owned remediation",
     "pill3": "Repeatable release gates",
@@ -57,8 +57,8 @@
   "Why": {
     "title": "Why teams need a stricter visibility layer",
     "lead": "AI discovery does not reward pages just because they exist. It rewards pages that answer cleanly, cite clearly, and expose enough trust for a model to use them.",
-    "p1": "AEO helps you become the answer. GEO helps AI systems treat your page as a reliable source. CiteOps audits both so the team can see the whole risk profile.",
-    "p2": "Think Lighthouse for AI-ready content: one repeatable score, one evidence trail, and one release bar for content, SEO, and engineering.",
+    "p1": "AEO helps you become the answer. GEO helps AI systems treat your page as a reliable source. AnswerLint audits both so the team can see the whole risk profile.",
+    "p2": "Think ESLint for AI-ready content: one repeatable score, one evidence trail, and one release bar for content, SEO, and engineering.",
     "card1Title": "Invisible in answer engines",
     "card1Body": "A page can rank and still miss AI answers. Weak structure and weak sources cause that.",
     "card2Title": "Teams read different signals",
@@ -84,13 +84,13 @@
   },
   "Education": {
     "title": "AEO & GEO in plain language",
-    "subtitle": "Both aim for visibility when answers are generated—not just ten blue links. CiteOps checks your content with that lens.",
+    "subtitle": "Both aim for visibility when answers are generated, not just ten blue links. AnswerLint checks your content with that lens.",
     "aeoTitle": "AEO — Answer Engine Optimization",
     "aeoBody": "AEO is for engines that pull short answers. Think snippets, voice, and Q&A blocks. Use clear headings and facts. That helps you get cited.",
-    "aeoProduct": "CiteOps shows gaps in clarity and structure. It shows what models need to quote you.",
+    "aeoProduct": "AnswerLint shows gaps in clarity and structure. It shows what models need to quote you.",
     "geoTitle": "GEO — Generative Engine Optimization",
     "geoBody": "GEO is for AI that reads many pages at once. Use one brand name. Add facts you can trace. Use clean HTML. That cuts wrong AI facts and keeps your brand right.",
-    "geoProduct": "CiteOps scores GEO with AEO. You see combined risk—not one vanity score."
+    "geoProduct": "AnswerLint scores GEO with AEO. You see combined risk, not one vanity score."
   },
   "Explainer": {
     "eyebrow": "AI visibility map",
@@ -101,78 +101,78 @@
     "cta": "Try the playground"
   },
   "How": {
-    "title": "How CiteOps works",
+    "title": "How AnswerLint works",
     "subtitle": "From a URL or file to a report you can share in CI or a browser.",
     "step1Title": "Choose input",
     "step1Body": "Point the CLI at a URL, a Markdown or HTML file, a folder, or a sitemap. It honors rate limits and robots.txt unless you override on your own site.",
     "step2Title": "Run the audit",
     "step2Body": "Checks run on your content. Failed checks explain why. Writers and devs see what to fix.",
     "step3Title": "Get scores",
-    "step3Body": "You get combined, AEO, and GEO scores. Add .citeops.json for project defaults if you want.",
+    "step3Body": "You get combined, AEO, and GEO scores. Add .answerlint.json for project defaults if you want.",
     "step4Title": "Export & gate",
     "step4Body": "Print HTML for people, JSON for scripts, or CSV for batches. Use --ci and --threshold to fail builds when scores drop."
   },
   "Workflow": {
     "eyebrow": "Developer workflow",
-    "title": "How do teams use llm-citeops with GitHub, Vercel, and HTTPS pages?",
+    "title": "How do teams use AnswerLint with GitHub, Vercel, and HTTPS pages?",
     "subtitle": "These are the practical workflows teams care about when they move from one-off checks to repeatable release habits.",
     "card1Title": "How do developers audit HTTPS pages before release?",
-    "card1Body": "Teams run llm-citeops against production-like HTTPS URLs so they can review answer readiness, trust signals, and citation gaps before a page ships.",
-    "card2Title": "How do teams use llm-citeops with GitHub and CI?",
+    "card1Body": "Teams run AnswerLint against production-like HTTPS URLs so they can review answer readiness, trust signals, and citation gaps before a page ships.",
+    "card2Title": "How do teams use AnswerLint with GitHub and CI?",
     "card2Body": "Teams export HTML and JSON reports into GitHub workflows, compare score changes across releases, and block merges when the agreed bar drops.",
     "card3Title": "What type of report fits Vercel previews and production sites?",
     "card3Body": "HTML works for human review, JSON fits automation, and CSV helps content ops benchmark many URLs or compare a launch page against a competitor."
   },
   "Comparison": {
     "eyebrow": "Comparison & alternatives",
-    "title": "llm-citeops vs manual review vs generic AI prompts",
-    "subtitle": "Should you audit by hand? Use a chat model from OpenAI? Or run a CLI on each release? This table lines up three paths.",
+    "title": "AnswerLint vs manual review vs generic AI prompts",
+    "subtitle": "Should you audit by hand? Use a chat model? Or run an answer-readiness linter on each release? This lines up three paths.",
     "col1": "Approach",
-    "col2": "llm-citeops",
+    "col2": "AnswerLint",
     "col3": "Manual review",
     "col4": "Generic AI prompt",
     "row1Label": "Repeatable scoring",
-    "row1CiteOps": "AEO, GEO, and combined scores you can export.",
+    "row1AnswerLint": "AEO, GEO, and combined scores you can export.",
     "row1Manual": "Often subjective. Scores drift by reviewer.",
     "row1Generic": "It can sum things up. It does not give a steady audit line.",
     "row2Label": "Workflow fit",
-    "row2CiteOps": "Runs local, in CI, and in batch reviews.",
+    "row2AnswerLint": "Runs local, in CI, and in batch reviews.",
     "row2Manual": "Hard to scale across many pages or ships.",
     "row2Generic": "Fine for ideas. Weak for rules and release gates.",
     "row3Label": "Evidence and outputs",
-    "row3CiteOps": "Returns HTML, JSON, and CSV with clear findings.",
+    "row3AnswerLint": "Returns HTML, JSON, and CSV with clear findings.",
     "row3Manual": "Proof often lives in notes or sheets.",
     "row3Generic": "Quality depends on the prompt. It is hard to compare runs.",
     "row4Label": "Best use case",
-    "row4CiteOps": "Teams that need one list of what to fix next.",
+    "row4AnswerLint": "Teams that need one list of what to fix next.",
     "row4Manual": "Small one-off reviews or editorial spot checks.",
     "row4Generic": "Early research or narrative drafting."
   },
   "Product": {
     "title": "An enterprise-grade audit loop inside an open-source CLI.",
-    "subtitle": "CiteOps is designed for teams that want AI visibility measurement to live beside their normal shipping workflow.",
+    "subtitle": "AnswerLint is designed for teams that want AI visibility measurement to live beside their normal shipping workflow.",
     "highlight1": "Executive risk framing",
     "highlight2": "Evidence per failed check",
     "highlight3": "Open-source, CI-friendly, local-first",
     "card1Title": "Reports that fit the audience",
     "card1Body": "HTML for stakeholders, JSON for pipelines, CSV for sitemap or folder runs.",
     "card2Title": "Project configuration",
-    "card2Body": "Optional .citeops.json in the repo or home directory; override path per run.",
+    "card2Body": "Optional .answerlint.json in the repo or home directory; override path per run.",
     "card3Title": "CI you can trust",
     "card3Body": "Exit codes for pass, score failure, network errors, and bad input—mirror how you run Lighthouse in CI.",
     "card4Title": "Operational safety",
     "card4Body": "Read-only fetches, configurable rate limits, and robots awareness for compliant crawling.",
     "card5Title": "Overview command",
-    "card5Body": "llm-citeops overview surfaces capabilities, outputs, and quick-start hints in the terminal.",
+    "card5Body": "AnswerLint overview surfaces capabilities, outputs, and quick-start hints in the terminal.",
     "card6Title": "Competitor analysis",
     "card6Body": "Compare one live URL against a competitor URL to see score deltas, parity gaps, and first fixes."
   },
   "Action": {
     "title": "Run the same inspection locally, in preview, and in CI.",
     "subtitle": "Start with the playground, then move the workflow into the repo so every important page ships with an answer-visibility bar.",
-    "imageAlt": "Terminal screenshot of the llm-citeops overview capability dashboard",
+    "imageAlt": "Terminal screenshot of the AnswerLint capability dashboard",
     "codeCaption": "Quick start",
-    "codeBlock": "npx llm-citeops audit --url \"https://example.com/docs/article\" --compare \"https://competitor.example/docs/article\" --output html --output-path ./compare-report.html",
+    "codeBlock": "npx answerlint@latest audit --url \"https://example.com/docs/article\" --compare \"https://competitor.example/docs/article\" --output html --output-path ./compare-report.html",
     "detail1": "Run the same checks locally, in CI, or across a sitemap.",
     "detail2": "Share a readable report with non-technical stakeholders without hiding the underlying evidence.",
     "detail3": "Use the playground for fast exploration, then move the workflow into your repo."
@@ -211,13 +211,13 @@
   },
   "Faq": {
     "eyebrow": "FAQ",
-    "title": "What do teams usually ask before they adopt llm-citeops?",
+    "title": "What do teams usually ask before they adopt AnswerLint?",
     "subtitle": "Content, SEO, and devs ask these when they pick AI visibility tools.",
-    "q1": "What does llm-citeops help content teams measure?",
+    "q1": "What does AnswerLint help content teams measure?",
     "a1": "It checks if a page can be the answer and the source. One report scores clarity, structure, trust, dates, and cite fit.",
-    "q2": "How does llm-citeops compare with manual reviews?",
-    "a2": "Manual review can spark ideas. It is slow and uneven. llm-citeops gives a steady audit, a score you can track, and fixes for writers, SEO, and devs.",
-    "q3": "Can developers use llm-citeops in CI and automation?",
+    "q2": "How does AnswerLint compare with manual reviews?",
+    "a2": "Manual review can spark ideas. It is slow and uneven. AnswerLint gives a steady audit, a score you can track, and fixes for writers, SEO, and devs.",
+    "q3": "Can developers use AnswerLint in CI and automation?",
     "a3": "Yes. Devs can run it on URLs, files, folders, and sitemaps. They can export HTML, JSON, or CSV. They can set CI floors to block ships when scores slip.",
     "q4": "Why do AEO and GEO both matter for B2B teams?",
     "a4": "AEO helps when buyers ask plain questions. GEO helps when AI picks which sites to trust. B2B teams need both to show up in AI-led discovery."
@@ -226,10 +226,10 @@
     "title": "What people say",
     "subtitle": "Real quotes from users will appear here as they come in.",
     "emptyTitle": "Reviews coming soon",
-    "emptyBody": "We are collecting feedback from teams using CiteOps. Check back, or star the repo to follow releases."
+    "emptyBody": "We are collecting feedback from teams using AnswerLint. Check back, or star the repo to follow releases."
   },
   "Cta": {
-    "title": "Give every launch page a sharper AI visibility review.",
+    "title": "Give every launch page a sharper AI answer-readiness review.",
     "subtitle": "Use the playground for quick exploration, then move the same workflow into the CLI and CI. Reports stay local and under your control.",
     "pill1": "Fast first scan",
     "pill2": "Clear executive readout",
@@ -239,7 +239,7 @@
     "ctaDocs": "README on GitHub"
   },
   "Footer": {
-    "rights": "CiteOps (llm-citeops) is MIT licensed. Respect robots.txt, terms of use, and rate limits when auditing third-party sites.",
+    "rights": "AnswerLint is MIT licensed. Respect robots.txt, terms of use, and rate limits when auditing third-party sites.",
     "docs": "Docs",
     "github": "GitHub",
     "npm": "npm"

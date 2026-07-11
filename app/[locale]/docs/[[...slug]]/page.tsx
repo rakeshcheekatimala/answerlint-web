@@ -23,21 +23,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const canonicalPath = `/docs/${(slug && slug.length > 0 ? slug : defaultDocsSlug).join("/")}`;
 
   return {
-    title: `${page.title} · CiteOps Docs`,
+    title: `${page.title} · AnswerLint Docs`,
     description: page.description,
     alternates: {
       canonical: canonicalPath,
     },
     openGraph: {
-      title: `${page.title} · CiteOps Docs`,
+      title: `${page.title} · AnswerLint Docs`,
       description: page.description,
       url: canonicalPath,
       type: "article",
-      siteName: "CiteOps",
+      siteName: "AnswerLint",
     },
     twitter: {
       card: "summary_large_image",
-      title: `${page.title} · CiteOps Docs`,
+      title: `${page.title} · AnswerLint Docs`,
       description: page.description,
     },
   };
@@ -62,7 +62,7 @@ export default async function DocsPage({ params }: Props) {
       url: `${baseUrl}${locale === "en" ? canonicalPath : `/${locale}${canonicalPath}`}`,
       author: {
         "@type": "Organization",
-        name: "CiteOps",
+        name: "AnswerLint",
       },
     },
     {

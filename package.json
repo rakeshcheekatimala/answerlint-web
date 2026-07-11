@@ -1,7 +1,7 @@
 {
-  "name": "citeops-website",
+  "name": "answerlint-website",
   "version": "0.1.0",
-  "description": "CiteOps (llm-citeops) — AEO and GEO content audits for the answer-engine era.",
+  "description": "AnswerLint — audit websites for AI-generated answers.",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -15,7 +15,6 @@
   "dependencies": {
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.4",
-    "llm-citeops": "^1.0.5",
     "next": "^15.5.14",
     "next-intl": "^4.9.0",
     "react": "^19.0.0",

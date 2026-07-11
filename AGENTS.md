@@ -2,7 +2,7 @@
 
 ## Project
 
-CiteOps marketing site and playground for `llm-citeops`. This is a Next.js 15 App Router app using React 19, TypeScript, Tailwind CSS, `next-intl`, Supabase, and Vitest.
+AnswerLint marketing site and playground. This is a Next.js 15 App Router app using React 19, TypeScript, Tailwind CSS, `next-intl`, Supabase, and Vitest.
 
 ## Commands
 

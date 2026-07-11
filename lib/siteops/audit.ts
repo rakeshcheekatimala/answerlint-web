@@ -291,7 +291,7 @@ async function fetchHtml(url: string): Promise<string> {
     timeoutMs: 20000,
     headers: {
       "user-agent":
-        "Mozilla/5.0 (compatible; CiteOpsPlayground/1.0; +https://www.npmjs.com/package/llm-citeops)",
+        "Mozilla/5.0 (compatible; AnswerLintPlayground/1.0; +https://useanswerlint.com)",
       accept: "text/html,application/xhtml+xml",
     },
   });
@@ -973,7 +973,7 @@ function renderHtmlReport(report: SiteOpsReport) {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>CiteOps Playground Report</title>
+    <title>AnswerLint Playground Report</title>
     <style>
       body { font-family: system-ui, sans-serif; margin: 0; background: #faf8f5; color: #1a1a1a; }
       main { max-width: 960px; margin: 0 auto; padding: 40px 20px 80px; }
@@ -993,7 +993,7 @@ function renderHtmlReport(report: SiteOpsReport) {
   </head>
   <body>
     <main>
-      <h1>CiteOps Playground Report</h1>
+      <h1>AnswerLint Playground Report</h1>
       <p>URL: ${escapeHtml(report.url)}</p>
       <p>Generated: ${escapeHtml(new Date(report.timestamp).toLocaleString())}</p>
 
@@ -1083,7 +1083,7 @@ function renderHtmlComparisonReport(report: SiteOpsComparisonReport) {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>CiteOps Competitor Comparison</title>
+    <title>AnswerLint Competitor Comparison</title>
     <style>
       body { font-family: system-ui, sans-serif; margin: 0; background: #faf8f5; color: #1a1a1a; }
       main { max-width: 1080px; margin: 0 auto; padding: 40px 20px 80px; }

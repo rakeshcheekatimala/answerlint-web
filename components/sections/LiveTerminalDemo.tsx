@@ -8,7 +8,7 @@ type TerminalLine = {
 };
 
 const terminalLines: TerminalLine[] = [
-  { text: "$ npx llm-citeops@latest audit --url https://website.com", tone: "info" },
+  { text: "$ npx answerlint@latest audit --url https://website.com", tone: "info" },
   { text: "fetch  sitemap.xml discovered 42 urls", tone: "muted" },
   { text: "crawl  selected /pricing, /docs, /compare for audit", tone: "muted" },
   { text: "pass   robots and canonical signals detected", tone: "success" },

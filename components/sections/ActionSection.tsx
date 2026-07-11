@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { CodeCopyBlock } from "@/components/CodeCopyBlock";
 import { branding } from "@/config/branding";
 
-const citeopsWorkflowYaml = `name: CiteOps audit
+const answerlintWorkflowYaml = `name: AnswerLint audit
 
 on:
   pull_request:
@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: npx llm-citeops@latest audit --url "$DEPLOY_URL" --ci --threshold 90`;
+      - run: npx answerlint@latest audit --url "$DEPLOY_URL" --ci --threshold 90`;
 
 export async function ActionSection() {
   const t = await getTranslations("Action");
@@ -46,7 +46,7 @@ export async function ActionSection() {
               <span className="h-2.5 w-2.5 rounded-full bg-[#f4c358]" />
               <span className="h-2.5 w-2.5 rounded-full bg-accent" />
               <span className="ml-2 text-xs font-bold uppercase tracking-[0.1em] text-white/70">
-                citeops overview
+                answerlint overview
               </span>
             </div>
             <Image
@@ -61,8 +61,8 @@ export async function ActionSection() {
           <div className="min-w-0 border border-border bg-card shadow-soft">
             <div className="border-b border-border p-5 sm:p-6">
               <CodeCopyBlock
-                code={citeopsWorkflowYaml}
-                label=".github/workflows/citeops.yml"
+                code={answerlintWorkflowYaml}
+                label=".github/workflows/answerlint.yml"
                 minHeightClassName="min-h-[16rem]"
               />
               <PipelineGraphic />
@@ -88,7 +88,7 @@ function PipelineGraphic() {
   const steps = [
     { label: "Commit", detail: "content change" },
     { label: "GitHub Action", detail: "preview URL" },
-    { label: "llm-citeops runs", detail: "AEO + GEO gate" },
+    { label: "AnswerLint runs", detail: "AEO + GEO gate" },
     { label: "PR Blocked", detail: "GEO score < 90" },
   ];
 

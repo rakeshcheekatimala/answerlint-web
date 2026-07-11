@@ -24,7 +24,7 @@ export function AuthorSection() {
                 Rakesh Cheekatimala
               </a>
               {" "}
-              builds CiteOps. llm-citeops is open source on GitHub and npm. 
+              builds AnswerLint, an AI-visibility linting system for modern content teams.
               </p>
             </div>
           </div>

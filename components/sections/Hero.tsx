@@ -64,7 +64,7 @@ export async function Hero() {
 
             <div className="mt-8 max-w-xl">
               <CodeCopyBlock
-                code="npx llm-citeops@latest audit --url https://website.com"
+                code="npx answerlint@latest audit --url https://website.com"
                 label="Instant validation"
                 minHeightClassName="min-h-[4.75rem]"
               />

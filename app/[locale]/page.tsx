@@ -57,7 +57,7 @@ export async function generateMetadata({
       description: t("description"),
       publishedTime,
       modifiedTime,
-      siteName: "CiteOps",
+      siteName: "AnswerLint",
     },
     twitter: {
       card: "summary_large_image",
@@ -79,7 +79,7 @@ export default async function HomePage({ params }: Props) {
     {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
-      name: "CiteOps",
+      name: "AnswerLint",
       applicationCategory: "DeveloperApplication",
       operatingSystem: "macOS, Linux, Windows",
       offers: {
@@ -98,7 +98,7 @@ export default async function HomePage({ params }: Props) {
       },
       publisher: {
         "@type": "Organization",
-        name: "CiteOps",
+        name: "AnswerLint",
         url: baseUrl,
       },
       dateModified: SITE_LAST_UPDATED_ISO,
@@ -115,23 +115,23 @@ export default async function HomePage({ params }: Props) {
       mainEntity: [
         {
           "@type": "Question",
-          name: "What does llm-citeops help content teams measure?",
+          name: "What does AnswerLint help content teams measure?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "llm-citeops measures how ready a page is to be quoted in AI answers and trusted in search using AEO, GEO, and composite scoring.",
+            text: "AnswerLint measures how ready a page is to be quoted in AI answers and trusted in search using AEO, GEO, and composite scoring.",
           },
         },
         {
           "@type": "Question",
-          name: "How does llm-citeops compare with manual reviews?",
+          name: "How does AnswerLint compare with manual reviews?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "llm-citeops gives content teams a repeatable checklist, structured scoring, and exportable reports instead of one-off subjective reviews.",
+            text: "AnswerLint gives content teams a repeatable checklist, structured scoring, and exportable reports instead of one-off subjective reviews.",
           },
         },
         {
           "@type": "Question",
-          name: "Can developers use llm-citeops in CI?",
+          name: "Can developers use AnswerLint in CI?",
           acceptedAnswer: {
             "@type": "Answer",
             text: "Yes. Developers can run URL, file, directory, and sitemap audits, export JSON or CSV, and enforce thresholds in CI.",

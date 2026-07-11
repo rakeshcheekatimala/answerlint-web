@@ -297,7 +297,7 @@ async function fetchPageMetadata(url: string): Promise<PageMetadata> {
   const response = await safeFetch(url, {
     headers: {
       "user-agent":
-        "Mozilla/5.0 (compatible; CiteOpsBusinessScan/1.0; +https://www.npmjs.com/package/llm-citeops)",
+        "Mozilla/5.0 (compatible; AnswerLintBusinessScan/1.0; +https://useanswerlint.com)",
       accept: "text/html,application/xhtml+xml",
     },
   });
@@ -327,7 +327,7 @@ async function fetchText(url: string) {
   const response = await safeFetch(url, {
     headers: {
       "user-agent":
-        "Mozilla/5.0 (compatible; CiteOpsBusinessScan/1.0; +https://www.npmjs.com/package/llm-citeops)",
+        "Mozilla/5.0 (compatible; AnswerLintBusinessScan/1.0; +https://useanswerlint.com)",
     },
   });
 

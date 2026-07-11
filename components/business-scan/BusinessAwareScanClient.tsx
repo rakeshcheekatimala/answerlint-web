@@ -40,8 +40,8 @@ const categoryTone: Record<BusinessCategory, string> = {
   Uncategorized: "border-zinc-200 bg-zinc-50 text-zinc-700",
 };
 
-const TOKEN_STORAGE_PREFIX = "citeops-bscan-token:";
-const PROJECT_TOKEN_HEADER = "x-citeops-project-token";
+const TOKEN_STORAGE_PREFIX = "answerlint-bscan-token:";
+const PROJECT_TOKEN_HEADER = "x-answerlint-project-token";
 
 function tokenStorageKey(projectId: string) {
   return `${TOKEN_STORAGE_PREFIX}${projectId}`;
@@ -345,7 +345,7 @@ export function BusinessAwareScanClient({
             Business-Aware Scan
           </p>
           <h1 className="mt-4 max-w-3xl font-display text-4xl font-semibold tracking-tight text-ink sm:text-5xl">
-            CiteOps maps your website like a business, not a sitemap.
+            AnswerLint maps your website like a business, not a sitemap.
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-8 text-ink-muted">
             Then it shows which pages AI should understand first, what to exclude,
@@ -413,7 +413,7 @@ export function BusinessAwareScanClient({
                   Which pages should AI understand first?
                 </h2>
                 <p className="mt-3 max-w-3xl text-base leading-7 text-ink-muted">
-                  CiteOps grouped your website into business areas. Review what
+                  AnswerLint grouped your website into business areas. Review what
                   matters, exclude noise, and adjust impact before running your
                   Business-Aware Scan.
                 </p>

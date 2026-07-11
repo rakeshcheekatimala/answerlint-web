@@ -128,7 +128,7 @@ export async function ReportSection() {
 
           <article className="bg-[#050505] p-5 sm:p-6 lg:col-span-2">
             <CodeCopyBlock
-              code={'llm-citeops audit --url "$DEPLOY_URL" --ci --threshold 90'}
+              code={'answerlint audit --url "$DEPLOY_URL" --ci --threshold 90'}
               label="CI command"
               minHeightClassName="min-h-[5.5rem]"
             />

@@ -186,11 +186,11 @@ function SingleReportView({
       <ScoreBand scores={report.scores} />
       <DownloadPanel
         downloads={downloads}
-        baseName="citeops-ai-visibility-report"
+        baseName="answerlint-ai-visibility-report"
       />
       <AuditList
         title="Priority fixes"
-        subtitle="Highest-impact recommendations from the saved SiteOps run."
+        subtitle="Highest-impact recommendations from the saved AnswerLint run."
         audits={report.audits.filter((audit) => audit.status !== "pass")}
       />
       <AuditList
@@ -246,7 +246,7 @@ function ComparisonReportView({
       </section>
       <DownloadPanel
         downloads={downloads}
-        baseName="citeops-competitor-analysis"
+        baseName="answerlint-competitor-analysis"
       />
       <InsightList title="Improve first" items={report.comparison.improve_first} />
       <InsightList

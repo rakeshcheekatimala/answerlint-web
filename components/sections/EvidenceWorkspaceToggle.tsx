@@ -147,7 +147,7 @@ function BusinessReport() {
 }
 
 function DeveloperReport() {
-  const terminalOutput = `$ llm-citeops audit --url "$DEPLOY_URL" --ci
+  const terminalOutput = `$ answerlint audit --url "$DEPLOY_URL" --ci
 composite 82  floor 70  status pass
 aeo       88  answer blocks detected
 geo       76  trust signals incomplete

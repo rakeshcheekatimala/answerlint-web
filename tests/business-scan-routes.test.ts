@@ -166,7 +166,7 @@ describe("GET /api/business-scan/projects/[id]", () => {
     getBusinessScanProject.mockResolvedValueOnce(project([]));
     await projectGet(
       new Request("http://test/api/business-scan/projects/proj-1", {
-        headers: { "x-citeops-project-token": "secret-token" },
+        headers: { "x-answerlint-project-token": "secret-token" },
       }),
       { params: Promise.resolve({ projectId: "proj-1" }) },
     );

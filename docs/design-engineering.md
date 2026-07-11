@@ -6,7 +6,7 @@ The standard is inspired by Emil Kowalski's writing on purposeful animation, tas
 
 ## Product Feel
 
-- Optimize for trust before delight. CiteOps is an audit and visibility product, so the UI should feel clear, deterministic, and calm.
+- Optimize for trust before delight. AnswerLint is an audit and visibility product, so the UI should feel clear, deterministic, and calm.
 - Make user intent obvious. Primary actions should be visually direct, labels should say the outcome, and dashboards should surface the next decision.
 - Details compound. Borders, spacing, pressed states, loading states, focus states, copy feedback, and empty states should all feel like one system.
 - Prefer product evidence over decoration. A visual element should explain a score, workflow, report, or action. Remove it if it only fills space.

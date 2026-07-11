@@ -22,7 +22,7 @@ export async function SiteHeader() {
     <SiteHeaderClient
       githubLabel={t("github")}
       githubUrl={branding.links.github}
-      logo={branding.logo}
+      displayName={branding.displayName}
       logoAlt={tBrand("logoAlt")}
       menuCloseLabel={t("closeMenu")}
       menuLabel={t("menu")}

@@ -90,7 +90,7 @@ function SearchShiftVisual() {
             </div>
             <div className="mt-4 border border-white/10 bg-white/[0.04] p-4">
               <p className="text-base font-semibold leading-7 text-white">
-                &quot;CiteOps identifies missing FAQ schema, freshness metadata, and
+                &quot;AnswerLint identifies missing FAQ schema, freshness metadata, and
                 citation gaps before launch.&quot;
               </p>
               <div className="mt-4 grid gap-2 sm:grid-cols-3">

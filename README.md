@@ -1,6 +1,6 @@
-# LLM-CITEOPS
+# AnswerLint Web
 
-Next.js (App Router) landing page for [llm-citeops](https://github.com/rakeshcheekatimala/llm-citeops). All marketing copy lives in `messages/`; branding and links live in `config/branding.ts` (with optional `NEXT_PUBLIC_*` overrides).
+Next.js (App Router) landing page for AnswerLint. All marketing copy lives in `messages/`; branding and links live in `config/branding.ts` (with optional `NEXT_PUBLIC_*` overrides).
 
 ## Development
 

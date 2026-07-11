@@ -14,7 +14,7 @@ export default async function PlaygroundPage({
     {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      name: "CiteOps Playground",
+      name: "AnswerLint Playground",
       url: `${SITE_URL}/playground`,
       description:
         "Interactive AEO and GEO audit playground with progressive report unlocks.",

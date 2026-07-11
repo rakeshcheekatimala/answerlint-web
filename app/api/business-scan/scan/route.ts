@@ -15,7 +15,7 @@ import { checkRateLimit, getClientKey } from "@/lib/net/rate-limit";
 
 export const runtime = "nodejs";
 
-const PROJECT_TOKEN_HEADER = "x-citeops-project-token";
+const PROJECT_TOKEN_HEADER = "x-answerlint-project-token";
 
 export async function POST(request: Request) {
   if (!isBusinessScanEnabled()) {

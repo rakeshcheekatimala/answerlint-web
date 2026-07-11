@@ -55,12 +55,12 @@ export const docsGroups: DocsGroup[] = [
         slug: ["getting-started", "installation"],
         title: "Installation",
         description:
-          "Install llm-citeops globally or run it directly with npx in a few minutes.",
+          "Install AnswerLint globally or run it directly with npx in a few minutes.",
         body: [
           {
             type: "lead",
             text:
-              "llm-citeops is a CLI for auditing pages and content repositories for AEO and GEO readiness. The fastest path is a global npm install, but `npx` works well when you want to run it without installing anything permanently.",
+              "AnswerLint is a CLI for auditing pages and content repositories for AEO and GEO readiness. The fastest path is a global npm install, but `npx` works well when you want to run it without installing anything permanently.",
           },
           {
             type: "subheading",
@@ -81,7 +81,7 @@ export const docsGroups: DocsGroup[] = [
           {
             type: "code",
             language: "bash",
-            code: "npm install -g llm-citeops",
+            code: "npm install -g answerlint",
           },
           {
             type: "paragraph",
@@ -95,7 +95,7 @@ export const docsGroups: DocsGroup[] = [
           {
             type: "code",
             language: "bash",
-            code: "npx llm-citeops audit --help",
+            code: "npx answerlint audit --help",
           },
           {
             type: "paragraph",
@@ -109,7 +109,7 @@ export const docsGroups: DocsGroup[] = [
           {
             type: "code",
             language: "bash",
-            code: "llm-citeops overview\n# or\nllm-citeops info",
+            code: "answerlint overview\n# or\nanswerlint info",
           },
           {
             type: "callout",
@@ -138,7 +138,7 @@ export const docsGroups: DocsGroup[] = [
             type: "code",
             language: "bash",
             code:
-              'llm-citeops audit --url "https://example.com/docs/article" --output html --output-path ./report.html',
+              'answerlint audit --url "https://example.com/docs/article" --output html --output-path ./report.html',
           },
           {
             type: "subheading",
@@ -148,7 +148,7 @@ export const docsGroups: DocsGroup[] = [
             type: "code",
             language: "bash",
             code:
-              'llm-citeops audit --url "https://example.com/docs/article" --compare "https://competitor.example/docs/article" --output html --output-path ./compare-report.html',
+              'answerlint audit --url "https://example.com/docs/article" --compare "https://competitor.example/docs/article" --output html --output-path ./compare-report.html',
           },
           {
             type: "subheading",
@@ -158,7 +158,7 @@ export const docsGroups: DocsGroup[] = [
             type: "code",
             language: "bash",
             code:
-              "llm-citeops audit --file ./content/post.md --output json --output-path ./report.json",
+              "answerlint audit --file ./content/post.md --output json --output-path ./report.json",
           },
           {
             type: "subheading",
@@ -168,7 +168,7 @@ export const docsGroups: DocsGroup[] = [
             type: "code",
             language: "bash",
             code:
-              "llm-citeops audit --dir ./content --output csv --output-path ./batch.csv",
+              "answerlint audit --dir ./content --output csv --output-path ./batch.csv",
           },
           {
             type: "subheading",
@@ -178,7 +178,7 @@ export const docsGroups: DocsGroup[] = [
             type: "code",
             language: "bash",
             code:
-              'llm-citeops audit --sitemap "https://example.com/sitemap.xml" --output csv --output-path ./site.csv',
+              'answerlint audit --sitemap "https://example.com/sitemap.xml" --output csv --output-path ./site.csv',
           },
           {
             type: "callout",
@@ -192,12 +192,12 @@ export const docsGroups: DocsGroup[] = [
         slug: ["getting-started", "configuration"],
         title: "Configuration",
         description:
-          "Use .citeops.json to define project defaults and keep your audit behavior consistent.",
+          "Use .answerlint.json to define project defaults and keep your audit behavior consistent.",
         body: [
           {
             type: "lead",
             text:
-              "llm-citeops can read project defaults from a `.citeops.json` file in your repository or home directory. This is the best way to make scoring and CI behavior consistent across teams.",
+              "AnswerLint can read project defaults from a `.answerlint.json` file in your repository or home directory. This is the best way to make scoring and CI behavior consistent across teams.",
           },
           {
             type: "subheading",
@@ -207,7 +207,7 @@ export const docsGroups: DocsGroup[] = [
             type: "code",
             language: "bash",
             code:
-              'llm-citeops audit --url "https://example.com" --config ./my-citeops.json',
+              'answerlint audit --url "https://example.com" --config ./my-answerlint.json',
           },
           {
             type: "subheading",
@@ -237,13 +237,13 @@ export const docsGroups: DocsGroup[] = [
           {
             type: "lead",
             text:
-              "CI mode turns llm-citeops into a release gate. If the composite score drops below your threshold, the command exits with code 1 so your pipeline can fail fast.",
+              "CI mode turns AnswerLint into a release gate. If the composite score drops below your threshold, the command exits with code 1 so your pipeline can fail fast.",
           },
           {
             type: "code",
             language: "bash",
             code:
-              'llm-citeops audit --url "$DEPLOY_URL" --ci --threshold 70 --output json --output-path ./citeops-report.json',
+              'answerlint audit --url "$DEPLOY_URL" --ci --threshold 70 --output json --output-path ./answerlint-report.json',
           },
           {
             type: "table",
@@ -267,7 +267,7 @@ export const docsGroups: DocsGroup[] = [
         slug: ["workflows", "testing"],
         title: "Testing and Validation",
         description:
-          "Smoke test llm-citeops locally before publishing or integrating into a larger workflow.",
+          "Smoke test AnswerLint locally before publishing or integrating into a larger workflow.",
         body: [
           {
             type: "lead",
@@ -282,7 +282,7 @@ export const docsGroups: DocsGroup[] = [
             type: "code",
             language: "bash",
             code:
-              "git clone <your-repo-url> citeops\ncd citeops\nnpm install\nnpm run lint\nnpm run build",
+              "git clone <your-repo-url> answerlint\ncd answerlint\nnpm install\nnpm run lint\nnpm run build",
           },
           {
             type: "subheading",
@@ -333,8 +333,8 @@ export const docsGroups: DocsGroup[] = [
           },
           {
             type: "image",
-            src: "https://raw.githubusercontent.com/rakeshcheekatimala/llm-citeops/main/assets/overview.png",
-            alt: "llm-citeops overview terminal screenshot",
+            src: "/brand/ai-visibility-explainer.png",
+            alt: "AnswerLint overview terminal screenshot",
           },
         ],
       },
@@ -342,7 +342,7 @@ export const docsGroups: DocsGroup[] = [
         slug: ["reference", "cli-commands"],
         title: "CLI Commands",
         description:
-          "Reference for the overview and audit commands exposed by llm-citeops.",
+          "Reference for the overview and audit commands exposed by AnswerLint.",
         body: [
           {
             type: "lead",
@@ -352,9 +352,9 @@ export const docsGroups: DocsGroup[] = [
           {
             type: "code",
             language: "text",
-            code: `llm-citeops overview   (alias: info)
+            code: `answerlint overview   (alias: info)
 
-llm-citeops audit [options]
+answerlint audit [options]
 
   --url <url>           Single URL
   --file <path>         Local .md or .html
@@ -370,7 +370,7 @@ llm-citeops audit [options]
   --ignore-robots       Ignore robots.txt
   --depth <n>           Crawl depth (default: 1)
   --rate <n>            Requests per second (default: 1)
-  --config <path>       Path to .citeops.json
+  --config <path>       Path to .answerlint.json
 
   --probe               Reserved for future LLM probe mode
   --compare <url>       Compare one target URL against one competitor URL`,
