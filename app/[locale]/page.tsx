@@ -156,6 +156,7 @@ export default async function HomePage({ params }: Props) {
       <main id="main-content">
         <Hero />
         <WhySection />
+        <AudienceSection />
         <StatsStrip />
         <ProductSection />
         <ReportSection />
@@ -165,7 +166,6 @@ export default async function HomePage({ params }: Props) {
         <ComparisonSection />
         <EducationSection />
         <ExplainerSection />
-        <AudienceSection />
         <CompatibilitySection />
         <FaqSection />
         <ReviewsSection locale={locale} />

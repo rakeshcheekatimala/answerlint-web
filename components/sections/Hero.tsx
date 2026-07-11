@@ -2,7 +2,9 @@ import type { CSSProperties } from "react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
-import { InstallCommandCopy } from "@/components/InstallCommandCopy";
+import { CodeCopyBlock } from "@/components/CodeCopyBlock";
+import { HeroPerspectiveSwitch } from "@/components/sections/HeroPerspectiveSwitch";
+import { LiveTerminalDemo } from "@/components/sections/LiveTerminalDemo";
 import { branding } from "@/config/branding";
 
 type ScoreTone = "high" | "mid" | "low";
@@ -13,19 +15,8 @@ const scoreToneClass: Record<ScoreTone, string> = {
   low: "text-score-low",
 };
 
-const scoreBgClass: Record<ScoreTone, string> = {
-  high: "bg-score-high",
-  mid: "bg-score-mid",
-  low: "bg-score-low",
-};
-
 export async function Hero() {
   const t = await getTranslations("Hero");
-  const developerFixes = [
-    t("panelDeveloperFix1"),
-    t("panelDeveloperFix2"),
-    t("panelDeveloperFix3"),
-  ];
   const prompts = [
     {
       query: "best tools for AI visibility audits",
@@ -72,9 +63,10 @@ export async function Hero() {
             </p>
 
             <div className="mt-8 max-w-xl">
-              <InstallCommandCopy
-                command={branding.installCommand}
-                label={t("installLabel")}
+              <CodeCopyBlock
+                code="npx llm-citeops@latest audit --url https://website.com"
+                label="Instant validation"
+                minHeightClassName="min-h-[4.75rem]"
               />
             </div>
 
@@ -103,24 +95,7 @@ export async function Hero() {
               </a>
             </div>
 
-            <div className="mt-10 grid gap-px border border-white/10 bg-white/10 sm:grid-cols-3">
-              {(
-                [
-                  { id: "01", label: t("pill1") },
-                  { id: "02", label: t("pill2") },
-                  { id: "03", label: t("pill3") },
-                ] as const
-              ).map(({ id, label }) => (
-                <div key={id} className="bg-[#0a0a0a] p-4">
-                  <span className="mb-2 block font-mono text-xs font-semibold text-white/34">
-                    SIGNAL {id}
-                  </span>
-                  <p className="text-sm font-medium leading-6 text-white/72">
-                    {label}
-                  </p>
-                </div>
-              ))}
-            </div>
+            <HeroPerspectiveSwitch />
           </div>
 
           <div className="relative">
@@ -134,97 +109,61 @@ export async function Hero() {
             />
             <div className="relative border border-white/10 bg-white/[0.035] p-3">
               <div className="border border-white/10 bg-[#050505]">
-              <div className="flex flex-col gap-4 border-b border-white/10 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.1em] text-white/40">
-                    {t("panelLabel")}
-                  </p>
-                  <h2 className="mt-2 font-display text-2xl font-semibold text-white sm:text-4xl">
-                    {t("panelTitle")}
-                  </h2>
-                </div>
-                <div className="border border-score-high/40 bg-score-high/10 px-3 py-2 text-xs font-bold uppercase tracking-[0.1em] text-score-high">
-                  LIVE AUDIT
-                </div>
-              </div>
-
-              <div className="grid gap-px border-b border-white/10 bg-white/10 sm:grid-cols-3">
-                {[
-                  { label: "Composite", value: 82, delta: "+12 vs floor" },
-                  { label: "AEO", value: 88, delta: "answer ready" },
-                  { label: "GEO", value: 76, delta: "trust gaps" },
-                ].map((score) => (
-                  <ScoreRing
-                    key={score.label}
-                    label={score.label}
-                    value={score.value}
-                    delta={score.delta}
-                  />
-                ))}
-              </div>
-
-              <div className="grid gap-px bg-white/10 lg:grid-cols-[0.92fr_1.08fr]">
-                <div className="bg-[#050505] p-5">
-                  <p className="text-xs font-bold uppercase tracking-[0.1em] text-white/38">
-                    {t("panelBusinessLabel")}
-                  </p>
-                  <p className="mt-3 max-w-[60ch] text-sm leading-[1.6] text-white/66">
-                    {t("panelBusinessBody")}
-                  </p>
-                  <div className="mt-5 grid gap-2">
-                    {[
-                      { label: "AI answer fit", value: 88, tone: "high" as const },
-                      { label: "Citation trust", value: 76, tone: "mid" as const },
-                      { label: "Schema coverage", value: 47, tone: "low" as const },
-                    ].map((item) => (
-                      <SegmentedScore key={item.label} {...item} />
-                    ))}
-                  </div>
-                </div>
-                <div className="bg-[#050505] p-5">
-                  <p className="text-xs font-bold uppercase tracking-[0.1em] text-white/38">
-                    {t("panelDeveloperLabel")}
-                  </p>
-                  <div className="mt-3 space-y-2">
-                    {developerFixes.map((item, index) => (
-                      <p
-                        key={item}
-                        className="border border-white/10 bg-white/[0.04] px-3 py-2 font-mono text-xs leading-6 text-white/68"
-                      >
-                        <span className="mr-2 text-score-mid">
-                          ISSUE-{index + 17}
-                        </span>
-                        {item}
-                      </p>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid gap-px border-t border-white/10 bg-white/10">
-                {prompts.map((prompt) => (
-                  <div
-                    key={prompt.query}
-                    className="grid gap-3 bg-[#050505] p-4 text-sm text-white/68 sm:grid-cols-[1.2fr_0.85fr_auto_auto] sm:items-center"
-                  >
-                    <p>{prompt.query}</p>
-                    <p className="font-mono text-xs text-white/46">
-                      {prompt.page}
+                <div className="flex flex-col gap-4 border-b border-white/10 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.1em] text-white/40">
+                      {t("panelLabel")}
                     </p>
-                    <span
-                      className={`w-fit border px-2 py-1 text-xs font-bold uppercase tracking-[0.1em] ${scoreToneClass[prompt.tone]} border-white/10 bg-white/[0.04]`}
-                    >
-                      {prompt.status}
-                    </span>
-                    <span
-                      className={`font-mono text-2xl font-semibold ${scoreToneClass[prompt.tone]}`}
-                    >
-                      {prompt.score}
-                    </span>
+                    <h2 className="mt-2 font-display text-2xl font-semibold text-white sm:text-4xl">
+                      {t("panelTitle")}
+                    </h2>
                   </div>
-                ))}
+                  <div className="border border-score-high/40 bg-score-high/10 px-3 py-2 text-xs font-bold uppercase tracking-[0.1em] text-score-high">
+                    LIVE AUDIT
+                  </div>
+                </div>
+
+                <LiveTerminalDemo />
+
+                <div className="grid gap-px border-y border-white/10 bg-white/10 sm:grid-cols-3">
+                  {[
+                    { label: "Composite", value: 82, delta: "+12 vs floor" },
+                    { label: "AEO", value: 88, delta: "answer ready" },
+                    { label: "GEO", value: 76, delta: "trust gaps" },
+                  ].map((score) => (
+                    <ScoreRing
+                      key={score.label}
+                      label={score.label}
+                      value={score.value}
+                      delta={score.delta}
+                    />
+                  ))}
+                </div>
+
+                <div className="grid gap-px border-t border-white/10 bg-white/10">
+                  {prompts.map((prompt) => (
+                    <div
+                      key={prompt.query}
+                      className="grid gap-3 bg-[#050505] p-4 text-sm text-white/68 sm:grid-cols-[1.2fr_0.85fr_auto_auto] sm:items-center"
+                    >
+                      <p>{prompt.query}</p>
+                      <p className="font-mono text-xs text-white/46">
+                        {prompt.page}
+                      </p>
+                      <span
+                        className={`w-fit border px-2 py-1 text-xs font-bold uppercase tracking-[0.1em] ${scoreToneClass[prompt.tone]} border-white/10 bg-white/[0.04]`}
+                      >
+                        {prompt.status}
+                      </span>
+                      <span
+                        className={`font-mono text-2xl font-semibold ${scoreToneClass[prompt.tone]}`}
+                      >
+                        {prompt.score}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
             </div>
           </div>
         </div>
@@ -276,37 +215,6 @@ function ScoreRing({
         <p className="text-xs font-bold uppercase tracking-[0.1em] text-white/46">
           {delta}
         </p>
-      </div>
-    </div>
-  );
-}
-
-function SegmentedScore({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: number;
-  tone: ScoreTone;
-}) {
-  const filled = Math.round(value / 10);
-
-  return (
-    <div>
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <span className="text-xs font-semibold text-white/56">{label}</span>
-        <span className={`font-mono text-xs font-semibold ${scoreToneClass[tone]}`}>
-          {value}
-        </span>
-      </div>
-      <div className="grid grid-cols-10 gap-1">
-        {Array.from({ length: 10 }).map((_, index) => (
-          <span
-            key={index}
-            className={`h-2 ${index < filled ? scoreBgClass[tone] : "bg-white/10"}`}
-          />
-        ))}
       </div>
     </div>
   );

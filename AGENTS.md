@@ -50,6 +50,10 @@ CiteOps marketing site and playground for `llm-citeops`. This is a Next.js 15 Ap
 - Use existing layout utilities such as `safe-pad`, `max-w-content`, `text-balance`, and `enterprise-grid`.
 - The visual style is restrained and product-focused: dense sections, strong typography, token-based colors, and accessible focus states.
 - Keep localized display copy in messages unless the existing component already intentionally uses static demo/sample text.
+- Follow `docs/design-engineering.md` for UI polish, component craft, motion decisions, and interaction feedback.
+- Animate only when it clarifies state, preserves spatial continuity, acknowledges user action, or explains product workflow. Remove decorative or high-frequency motion that slows the user down.
+- Every direct action should provide immediate feedback; copy commands should use the shared copy interaction pattern.
+- Keep dashboard/report surfaces stable with explicit dimensions for score cards, terminal blocks, and repeated panels to avoid layout shift.
 
 ## Tests
 

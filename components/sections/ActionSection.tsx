@@ -4,6 +4,20 @@ import { getTranslations } from "next-intl/server";
 import { CodeCopyBlock } from "@/components/CodeCopyBlock";
 import { branding } from "@/config/branding";
 
+const citeopsWorkflowYaml = `name: CiteOps audit
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+jobs:
+  ai-visibility-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npx llm-citeops@latest audit --url "$DEPLOY_URL" --ci --threshold 90`;
+
 export async function ActionSection() {
   const t = await getTranslations("Action");
 
@@ -47,9 +61,9 @@ export async function ActionSection() {
           <div className="min-w-0 border border-border bg-card shadow-soft">
             <div className="border-b border-border p-5 sm:p-6">
               <CodeCopyBlock
-                code={t("codeBlock")}
-                label={t("codeCaption")}
-                minHeightClassName="min-h-[9.5rem]"
+                code={citeopsWorkflowYaml}
+                label=".github/workflows/citeops.yml"
+                minHeightClassName="min-h-[16rem]"
               />
               <PipelineGraphic />
             </div>

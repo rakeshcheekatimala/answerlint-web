@@ -113,13 +113,20 @@ function ComparisonColumn({
 }) {
   return (
     <article className={`${featured ? "bg-[#0a0a0a] text-white" : "bg-card text-ink"} p-5 sm:p-6`}>
-      <p
-        className={`text-xs font-bold uppercase tracking-[0.1em] ${
-          featured ? "text-score-high" : "text-ink-subtle"
-        }`}
-      >
-        {label}
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p
+          className={`text-xs font-bold uppercase tracking-[0.1em] ${
+            featured ? "text-score-high" : "text-ink-subtle"
+          }`}
+        >
+          {label}
+        </p>
+        {featured ? (
+          <span className="border border-score-high/40 bg-score-high/10 px-2.5 py-1 text-xs font-bold uppercase tracking-[0.1em] text-score-high">
+            Opinionated pick
+          </span>
+        ) : null}
+      </div>
       <h3 className="mt-3 text-2xl font-semibold">{heading}</h3>
       <div className="mt-6 grid gap-3">
         {features.map((feature) => (
@@ -137,12 +144,14 @@ function ComparisonColumn({
                   feature.pass
                     ? featured
                       ? "border-score-high text-score-high"
-                      : "border-ink text-ink"
-                    : "border-score-low text-score-low"
+                      : "border-emerald-600 text-emerald-700"
+                    : featured
+                      ? "border-white/20 text-white/34"
+                      : "border-border-strong text-ink-subtle"
                 }`}
                 aria-hidden="true"
               >
-                {feature.pass ? "✓" : "×"}
+                {feature.pass ? "✓" : "—"}
               </span>
               <div>
                 <p className="text-sm font-semibold">{feature.title}</p>
