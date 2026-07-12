@@ -25,7 +25,7 @@ export function CodeCopyBlock({
 
   return (
     <div
-      className={`overflow-hidden border border-white/10 bg-[#050505] ${className}`}
+      className={`min-w-0 overflow-hidden border border-white/10 bg-[#050505] ${className}`}
     >
       <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
         <p className="text-xs font-bold uppercase tracking-[0.1em] text-white/42">

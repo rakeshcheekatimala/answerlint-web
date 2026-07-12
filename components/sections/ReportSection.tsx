@@ -44,8 +44,8 @@ export async function ReportSection() {
           </p>
         </div>
 
-        <div className="mt-12 grid auto-rows-[minmax(12rem,auto)] gap-px border border-white/10 bg-white/10 lg:grid-cols-6">
-          <article className="bg-white/[0.04] p-5 sm:p-6 lg:col-span-3 lg:row-span-2">
+        <div className="mt-12 grid min-w-0 auto-rows-[minmax(12rem,auto)] gap-px border border-white/10 bg-white/10 lg:grid-cols-6">
+          <article className="min-w-0 bg-white/[0.04] p-5 sm:p-6 lg:col-span-3 lg:row-span-2">
             <p className="text-xs font-bold uppercase tracking-[0.1em] text-white/38">
               {t("businessLabel")}
             </p>
@@ -72,7 +72,7 @@ export async function ReportSection() {
             </div>
           </article>
 
-          <article className="bg-[#050505] p-5 sm:p-6 lg:col-span-3">
+          <article className="min-w-0 bg-[#050505] p-5 sm:p-6 lg:col-span-3">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.1em] text-white/38">
@@ -104,7 +104,7 @@ export async function ReportSection() {
             </div>
           </article>
 
-          <article className="bg-white/[0.04] p-5 sm:p-6 lg:col-span-2">
+          <article className="min-w-0 bg-white/[0.04] p-5 sm:p-6 lg:col-span-2">
             <p className="text-xs font-bold uppercase tracking-[0.1em] text-white/38">
               {t("developerLabel")}
             </p>
@@ -126,7 +126,7 @@ export async function ReportSection() {
             </div>
           </article>
 
-          <article className="bg-[#050505] p-5 sm:p-6 lg:col-span-2">
+          <article className="min-w-0 bg-[#050505] p-5 sm:p-6 lg:col-span-2">
             <CodeCopyBlock
               code={'answerlint audit --url "$DEPLOY_URL" --ci --threshold 90'}
               label="CI command"
@@ -143,7 +143,7 @@ export async function ReportSection() {
             </div>
           </article>
 
-          <article className="bg-[#050505] p-5 sm:p-6 lg:col-span-2">
+          <article className="min-w-0 bg-[#050505] p-5 sm:p-6 lg:col-span-2">
             <p className="text-xs font-bold uppercase tracking-[0.1em] text-white/38">
               {t("fixesLabel")}
             </p>

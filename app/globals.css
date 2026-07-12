@@ -22,11 +22,21 @@
     0 18px 55px rgb(10 10 10 / 0.08);
 }
 
+html {
+  /* Prevent mobile browsers from auto-boosting font sizes in narrow
+     columns, which otherwise makes type sizing look inconsistent between
+     sections. Pinch-zoom stays fully enabled (no user-scalable=no) so the
+     site remains WCAG 1.4.4 compliant. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   color: var(--color-ink);
   background: var(--color-paper);
   font-family: var(--font-sans), system-ui, sans-serif;
   overflow-x: clip;
+  touch-action: manipulation;
 }
 
 .font-display {

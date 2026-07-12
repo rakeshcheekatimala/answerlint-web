@@ -750,7 +750,7 @@ function PageRow({
                 : page.included,
           })
         }
-        className="rounded-xl border border-border bg-wash px-3 py-2 text-sm text-ink"
+        className="w-full rounded-xl border border-border bg-wash px-3 py-2.5 text-base text-ink sm:w-auto"
       >
         {BUSINESS_CATEGORIES.map((category) => (
           <option key={category} value={category}>
@@ -766,7 +766,7 @@ function PageRow({
             impactTier: event.target.value as BusinessImpactTier,
           })
         }
-        className="rounded-xl border border-border bg-wash px-3 py-2 text-sm text-ink"
+        className="w-full rounded-xl border border-border bg-wash px-3 py-2.5 text-base text-ink sm:w-auto"
       >
         {IMPACT_TIERS.map((tier) => (
           <option key={tier} value={tier}>

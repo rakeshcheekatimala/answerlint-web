@@ -26,8 +26,8 @@ export function EvidenceWorkspaceToggle({
 
   return (
     <div className="mt-12 border border-border bg-card">
-      <div className="grid gap-px border-b border-border bg-border lg:grid-cols-[0.82fr_1.18fr]">
-        <div className="bg-card p-5 sm:p-6">
+      <div className="grid min-w-0 gap-px border-b border-border bg-border lg:grid-cols-[0.82fr_1.18fr]">
+        <div className="min-w-0 bg-card p-5 sm:p-6">
           <p className="text-xs font-bold uppercase tracking-[0.1em] text-ink-subtle">
             Evidence workspace
           </p>
@@ -71,7 +71,7 @@ export function EvidenceWorkspaceToggle({
           </div>
         </div>
 
-        <div className="min-h-[32rem] bg-[#0a0a0a] p-4 text-white sm:p-6">
+        <div className="min-h-[32rem] min-w-0 bg-[#0a0a0a] p-4 text-white sm:p-6">
           {isBusiness ? <BusinessReport /> : <DeveloperReport />}
         </div>
       </div>

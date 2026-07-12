@@ -49,8 +49,8 @@ export async function Hero() {
       <div className="absolute inset-x-0 top-0 h-px bg-white/20" />
 
       <div className="safe-pad relative mx-auto max-w-[82rem] pb-24 pt-16 sm:px-6 sm:pb-32 sm:pt-20 lg:px-8 lg:pb-40 lg:pt-24">
-        <div className="grid gap-10 xl:grid-cols-[1.02fr_0.98fr] xl:items-center xl:gap-12">
-          <div className="relative">
+        <div className="grid min-w-0 gap-10 xl:grid-cols-[1.02fr_0.98fr] xl:items-center xl:gap-12">
+          <div className="relative min-w-0">
             <p className="mb-5 inline-flex border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-bold uppercase tracking-[0.1em] text-score-high">
               {t("eyebrow")}
             </p>
@@ -98,7 +98,7 @@ export async function Hero() {
             <HeroPerspectiveSwitch />
           </div>
 
-          <div className="relative">
+          <div className="relative min-w-0">
             <div
               className="pointer-events-none absolute -inset-8"
               style={{
