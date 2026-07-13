@@ -93,11 +93,11 @@
     "geoProduct": "AnswerLint scores GEO with AEO. You see combined risk, not one vanity score."
   },
   "Explainer": {
-    "eyebrow": "AI visibility map",
-    "title": "Show the market how visibility moves from ranking to being cited.",
-    "subtitle": "This chart sits after the hero. It explains the idea fast. It helps founders and ops trust the story.",
-    "imageAlt": "Explainer graphic showing how SEO connects to AEO and GEO in AI search",
-    "openImage": "Open full visual",
+    "eyebrow": "Live audit report",
+    "title": "Show the exact evidence behind every AI visibility score.",
+    "subtitle": "Use a real report to explain scores, failed checks, and the fixes that help a page become easier for AI systems to understand and cite.",
+    "imageAlt": "AnswerLint HTML report screenshot from a live React website audit",
+    "openImage": "Open report visual",
     "cta": "Try the playground"
   },
   "How": {
@@ -170,7 +170,7 @@
   "Action": {
     "title": "Run the same inspection locally, in preview, and in CI.",
     "subtitle": "Start with the playground, then move the workflow into the repo so every important page ships with an answer-visibility bar.",
-    "imageAlt": "Terminal screenshot of the AnswerLint capability dashboard",
+    "imageAlt": "AnswerLint report screenshot from a live React website audit",
     "codeCaption": "Quick start",
     "codeBlock": "npx answerlint@latest audit --url \"https://example.com/docs/article\" --compare \"https://competitor.example/docs/article\" --output html --output-path ./compare-report.html",
     "detail1": "Run the same checks locally, in CI, or across a sitemap.",

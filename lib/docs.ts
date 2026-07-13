@@ -334,7 +334,7 @@ export const docsGroups: DocsGroup[] = [
           {
             type: "image",
             src: "/brand/ai-visibility-explainer.png",
-            alt: "AnswerLint overview terminal screenshot",
+            alt: "AnswerLint HTML report screenshot from a live React website audit",
           },
         ],
       },

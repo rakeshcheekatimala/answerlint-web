@@ -1,19 +1,19 @@
 <svg
-  width="1196"
-  height="1315"
-  viewBox="0 0 1196 1315"
+  width="1280"
+  height="1600"
+  viewBox="0 0 1280 1600"
   fill="none"
   xmlns="http://www.w3.org/2000/svg"
 >
-  <title>AI Visibility Explainer</title>
+  <title>AnswerLint Live Audit Report</title>
   <desc>
-    AnswerLint explainer graphic showing the relationship between SEO, AEO, and GEO.
+    AnswerLint HTML report screenshot from a live React website audit.
   </desc>
-  <rect width="1196" height="1315" rx="28" fill="#09111F" />
+  <rect width="1280" height="1600" rx="28" fill="#F8F9FA" />
   <image
     href="/brand/ai-visibility-explainer.png"
-    width="1196"
-    height="1315"
+    width="1280"
+    height="1600"
     preserveAspectRatio="xMidYMid meet"
   />
 </svg>
