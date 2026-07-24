@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import Link from "next/link";
 
 export async function ProductSection() {
   const t = await getTranslations("Product");
@@ -58,6 +59,26 @@ export async function ProductSection() {
               </p>
             </article>
           ))}
+        </div>
+        <div className="mt-8 flex flex-col gap-4 border border-border bg-paper-muted p-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="font-mono text-xs font-semibold uppercase tracking-[0.12em] text-ink-subtle">
+              Free tool
+            </p>
+            <h3 className="mt-2 text-lg font-semibold text-ink">
+              Generate and validate your site’s llms.txt
+            </h3>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-muted">
+              Turn a public website into a deterministic AI roadmap, inspect the
+              output, and download files ready to publish.
+            </p>
+          </div>
+          <Link
+            href="/tools/llms-txt"
+            className="inline-flex min-h-11 shrink-0 items-center justify-center bg-ink px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-accent-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          >
+            Open llms.txt generator
+          </Link>
         </div>
       </div>
     </section>

@@ -18,6 +18,8 @@ type Props = {
   menuCloseLabel: string;
   menuLabel: string;
   navItems: NavItem[];
+  toolItems: NavItem[];
+  toolsLabel: string;
   npmLabel: string;
   npmUrl: string;
 };
@@ -30,6 +32,8 @@ export function SiteHeaderClient({
   menuCloseLabel,
   menuLabel,
   navItems,
+  toolItems,
+  toolsLabel,
   npmLabel,
   npmUrl,
 }: Props) {
@@ -86,6 +90,28 @@ export function SiteHeaderClient({
                   {item.label}
                 </Link>
               ))}
+              <details className="group relative">
+                <summary className="flex cursor-pointer list-none items-center gap-1.5 border border-transparent px-3.5 py-2 text-sm font-medium text-white/70 transition-colors hover:border-white/10 hover:bg-white/[0.04] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                  {toolsLabel}
+                  <span
+                    aria-hidden="true"
+                    className="font-mono text-xs transition-transform group-open:rotate-180"
+                  >
+                    ↓
+                  </span>
+                </summary>
+                <div className="absolute right-0 top-[calc(100%+0.65rem)] z-50 w-64 border border-white/10 bg-[#0d0d0d] p-2 shadow-[0_18px_50px_rgba(0,0,0,0.4)]">
+                  {toolItems.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="block border border-transparent px-3 py-3 text-sm font-medium text-white/70 transition-colors hover:border-white/10 hover:bg-white/[0.05] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-score-high"
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              </details>
             </nav>
 
             <div className="hidden items-center gap-2 xl:flex">
@@ -119,7 +145,7 @@ export function SiteHeaderClient({
               <MobileMenu
                 closeLabel={menuCloseLabel}
                 menuLabel={menuLabel}
-                items={navItems}
+                items={[...navItems, ...toolItems]}
                 secondaryItems={[
                   { href: npmUrl, label: npmLabel },
                   { href: githubUrl, label: githubLabel },

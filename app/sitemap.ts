@@ -9,6 +9,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     "",
     "/playground",
+    "/tools/llms-txt",
     "/docs/getting-started/installation",
   ].map((path) => ({
     url: `${SITE_URL}${path}`,
