@@ -16,6 +16,9 @@
     "product": "Product",
     "reviews": "Reviews",
     "playground": "Playground",
+    "tools": "Tools",
+    "businessScan": "Business-aware scan",
+    "llmsTxt": "llms.txt generator",
     "github": "GitHub",
     "npm": "npm"
   },
@@ -224,9 +227,40 @@
   },
   "Reviews": {
     "title": "What people say",
-    "subtitle": "Real quotes from users will appear here as they come in.",
+    "subtitle": "Specific experiences from people who have tried AnswerLint in real workflows.",
     "emptyTitle": "Reviews coming soon",
-    "emptyBody": "We are collecting feedback from teams using AnswerLint. Check back, or star the repo to follow releases."
+    "emptyBody": "Tried AnswerLint? Tell us what became easier, clearer, or still needs work.",
+    "share": "Share your experience",
+    "verified": "Verified submission"
+  },
+  "ReviewForm": {
+    "eyebrow": "Product feedback",
+    "title": "Share your AnswerLint experience",
+    "subtitle": "Tell us what you tried and what happened. Every submission is reviewed before anything appears publicly.",
+    "featuresLabel": "Which features have you tried?",
+    "featuresHint": "Choose every workflow you used.",
+    "ratingLabel": "How was your overall experience?",
+    "ratingLow": "Needs work",
+    "ratingHigh": "Excellent",
+    "experienceLabel": "What happened?",
+    "experienceHint": "What did you use, and what became easier or clearer?",
+    "improvementLabel": "What could we improve?",
+    "improvementHint": "Optional. This stays private unless we ask your permission.",
+    "aboutYou": "About you",
+    "nameLabel": "Full name",
+    "emailLabel": "Email",
+    "emailHint": "Optional and never shown publicly.",
+    "roleLabel": "Role",
+    "companyLabel": "Company",
+    "firstNameOnly": "Show only my first name if this review is published.",
+    "consent": "AnswerLint may publish my review and lightly edit it for clarity without changing its meaning.",
+    "submit": "Submit for review",
+    "submitting": "Submitting…",
+    "moderationNote": "Nothing is published automatically.",
+    "successTitle": "Thanks for the useful signal.",
+    "successBody": "Your experience was submitted for review. Private feedback and contact details will not be published.",
+    "submitAnother": "Submit another response",
+    "genericError": "Unable to submit the review. Please try again."
   },
   "Cta": {
     "title": "Give every launch page a sharper AI answer-readiness review.",
@@ -240,6 +274,8 @@
   },
   "Footer": {
     "rights": "AnswerLint is MIT licensed. Respect robots.txt, terms of use, and rate limits when auditing third-party sites.",
+    "llmsTxt": "llms.txt generator",
+    "review": "Leave a review",
     "docs": "Docs",
     "github": "GitHub",
     "npm": "npm"
