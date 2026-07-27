@@ -1,7 +1,7 @@
 {
   "Metadata": {
-    "title": "AnswerLint — linting your website for AI answers",
-    "description": "AnswerLint scans websites for answer readiness, citation trust, and AI search release risk. Audit pages for ChatGPT, Gemini, Perplexity, and AI Overviews."
+    "title": "AnswerLint — AI Answer Readiness Coach",
+    "description": "Make content easier for AI systems to understand, answer from, and cite. AnswerLint finds unclear answers, weak evidence, and missing trust signals locally."
   },
   "branding": {
     "logoAlt": "AnswerLint wordmark"
@@ -23,23 +23,29 @@
     "npm": "npm"
   },
   "Hero": {
-    "eyebrow": "Linting your website for AI answers",
-    "title": "Lint your website before AI ignores it.",
-    "subtitle": "AnswerLint audits whether ChatGPT, Gemini, Perplexity, and AI Overviews can understand, trust, and cite your pages.",
+    "eyebrow": "Answer Readiness Coach",
+    "title": "Make your content easy for AI to answer from and cite.",
+    "subtitle": "AnswerLint identifies unclear answers, missing trust signals, weak evidence, and citation barriers—then shows exactly what to improve.",
     "questionsLead": "Know which launch pages answer the buyer question, which signals are missing, and where competitors are easier for AI systems to quote.",
     "businessLead": "Start with the business map, then inspect individual pages when you need deeper evidence.",
     "ctaBusinessScan": "Scan my site",
-    "ctaPlayground": "Audit one page",
+    "ctaPlayground": "Check my content",
     "ctaCompetitor": "Competitor analysis",
     "ctaGithub": "View source",
     "ctaNpm": "Package",
+    "trustLabel": "Local checks · Deterministic · No LLM required",
     "installLabel": "Run AnswerLint",
     "pill1": "Executive visibility readout",
     "pill2": "Developer-owned remediation",
     "pill3": "Repeatable release gates",
-    "panelLabel": "Evidence workspace",
-    "panelTitle": "One audit surface for answers and citations",
-    "panelBadge": "Board + build ready",
+    "panelLabel": "AI answer readiness",
+    "panelTitle": "Answer Readiness Coach",
+    "panelBadge": "Local checks · No LLM required",
+    "decisionLabel": "Content outcome",
+    "decisionStatus": "Needs improvement",
+    "decisionSummary": "3 issues prevent strong citation readiness",
+    "highestImpactLabel": "Improve first:",
+    "highestImpactBody": "Add visible authorship, freshness metadata, and source-backed claims.",
     "panelBusinessLabel": "Business view",
     "panelBusinessBody": "This page is strong at direct answers, but trust and freshness signals are leaving citation share on the table. Fixing schema and source attribution should improve visibility fastest.",
     "panelDeveloperLabel": "Developer view",
@@ -104,16 +110,20 @@
     "cta": "Try the playground"
   },
   "How": {
-    "title": "How AnswerLint works",
-    "subtitle": "From a URL or file to a report you can share in CI or a browser.",
-    "step1Title": "Choose input",
-    "step1Body": "Point the CLI at a URL, a Markdown or HTML file, a folder, or a sitemap. It honors rate limits and robots.txt unless you override on your own site.",
-    "step2Title": "Run the audit",
-    "step2Body": "Checks run on your content. Failed checks explain why. Writers and devs see what to fix.",
-    "step3Title": "Get scores",
-    "step3Body": "You get combined, AEO, and GEO scores. Add .answerlint.json for project defaults if you want.",
-    "step4Title": "Export & gate",
-    "step4Body": "Print HTML for people, JSON for scripts, or CSV for batches. Use --ci and --threshold to fail builds when scores drop."
+    "eyebrow": "AI answer readiness workflow",
+    "title": "Add content. Inspect clarity and trust. Fix what matters.",
+    "subtitle": "A simple, evidence-backed path from vague content to clearer answers, stronger trust signals, and better citation readiness.",
+    "imageAlt": "AnswerLint workflow showing content input, deterministic clarity and trust checks, and an improved answer with authorship and freshness signals",
+    "openImage": "Open the full-size workflow infographic",
+    "mobileImageHint": "Open full size to inspect every signal.",
+    "step1Title": "Add content",
+    "step1Body": "Start with a URL, Markdown or HTML file, folder, or sitemap. Your local files stay local.",
+    "step2Title": "Inspect clarity and trust",
+    "step2Body": "Check direct answers, entities, authorship, freshness, sources, structure, and citation readiness.",
+    "step3Title": "Review evidence",
+    "step3Body": "See the affected content, why the signal matters, and the exact recommended change.",
+    "step4Title": "Fix and recheck",
+    "step4Body": "Edit the source yourself, compare before and after, and confirm that important signals improved."
   },
   "Workflow": {
     "eyebrow": "Developer workflow",
@@ -152,11 +162,11 @@
     "row4Generic": "Early research or narrative drafting."
   },
   "Product": {
-    "title": "An enterprise-grade audit loop inside an open-source CLI.",
-    "subtitle": "AnswerLint is designed for teams that want AI visibility measurement to live beside their normal shipping workflow.",
-    "highlight1": "Executive risk framing",
-    "highlight2": "Evidence per failed check",
-    "highlight3": "Open-source, CI-friendly, local-first",
+    "title": "An Answer Readiness Coach inside an open-source CLI.",
+    "subtitle": "Start with a clear content outcome, inspect the evidence, then use AEO, GEO, and composite scores as supporting diagnostic context.",
+    "highlight1": "Clearer answers",
+    "highlight2": "Stronger trust signals",
+    "highlight3": "Better citation readiness",
     "card1Title": "Reports that fit the audience",
     "card1Body": "HTML for stakeholders, JSON for pipelines, CSV for sitemap or folder runs.",
     "card2Title": "Project configuration",
@@ -165,8 +175,8 @@
     "card3Body": "Exit codes for pass, score failure, network errors, and bad input—mirror how you run Lighthouse in CI.",
     "card4Title": "Operational safety",
     "card4Body": "Read-only fetches, configurable rate limits, and robots awareness for compliant crawling.",
-    "card5Title": "Overview command",
-    "card5Body": "AnswerLint overview surfaces capabilities, outputs, and quick-start hints in the terminal.",
+    "card5Title": "Local writing coach",
+    "card5Body": "Watch Markdown or MDX files with the terminal UI and refresh readiness findings whenever you save—without uploading content.",
     "card6Title": "Competitor analysis",
     "card6Body": "Compare one live URL against a competitor URL to see score deltas, parity gaps, and first fixes."
   },
