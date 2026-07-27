@@ -72,17 +72,17 @@ export async function Hero() {
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
               <Link
-                href="/tools/business-aware-scan"
+                href="/playground"
                 className="inline-flex w-full items-center justify-center border border-score-high bg-score-high px-5 py-3 text-sm font-bold text-[#0a0a0a] transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-score-high sm:w-auto"
               >
-                {t("ctaBusinessScan")}
+                {t("ctaPlayground")}
               </Link>
 
               <Link
-                href="/playground"
+                href="/tools/business-aware-scan"
                 className="inline-flex w-full items-center justify-center border border-white/15 bg-white px-5 py-3 text-sm font-bold text-[#0a0a0a] transition-colors hover:bg-paper-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-score-high sm:w-auto"
               >
-                {t("ctaPlayground")}
+                {t("ctaBusinessScan")}
               </Link>
 
               <a
@@ -94,6 +94,10 @@ export async function Hero() {
                 {t("ctaGithub")}
               </a>
             </div>
+
+            <p className="mt-4 font-mono text-xs font-semibold uppercase tracking-[0.12em] text-white/46">
+              {t("trustLabel")}
+            </p>
 
             <HeroPerspectiveSwitch />
           </div>
@@ -119,7 +123,29 @@ export async function Hero() {
                     </h2>
                   </div>
                   <div className="border border-score-high/40 bg-score-high/10 px-3 py-2 text-xs font-bold uppercase tracking-[0.1em] text-score-high">
-                    LIVE AUDIT
+                    {t("panelBadge")}
+                  </div>
+                </div>
+
+                <div className="grid gap-px border-b border-white/10 bg-white/10 sm:grid-cols-[0.72fr_1.28fr]">
+                  <div className="bg-[#050505] p-4 sm:p-5">
+                    <p className="text-xs font-bold uppercase tracking-[0.1em] text-white/38">
+                      {t("decisionLabel")}
+                    </p>
+                    <p className="mt-3 w-fit border border-score-mid/50 bg-score-mid/10 px-3 py-2 text-xs font-bold uppercase tracking-[0.1em] text-score-mid">
+                      {t("decisionStatus")}
+                    </p>
+                  </div>
+                  <div className="bg-[#050505] p-4 sm:p-5">
+                    <p className="text-lg font-semibold text-white">
+                      {t("decisionSummary")}
+                    </p>
+                    <p className="mt-3 text-sm leading-6 text-white/58">
+                      <span className="font-semibold text-score-high">
+                        {t("highestImpactLabel")}
+                      </span>{" "}
+                      {t("highestImpactBody")}
+                    </p>
                   </div>
                 </div>
 

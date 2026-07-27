@@ -89,7 +89,7 @@ export default async function HomePage({ params }: Props) {
       },
       url: pageUrl,
       description:
-        "Open-source audit tooling and playground for Answer Engine Optimization and Generative Engine Optimization.",
+        "A local, deterministic Answer Readiness Coach that shows whether AI systems can understand, trust, and cite your content—and what to improve.",
       author: {
         "@type": "Person",
         name: "Rakesh Cheekatimala",
@@ -155,13 +155,13 @@ export default async function HomePage({ params }: Props) {
       <SiteHeader />
       <main id="main-content">
         <Hero />
+        <HowSection />
         <WhySection />
         <AudienceSection />
         <StatsStrip />
         <ProductSection />
         <ReportSection />
         <ActionSection />
-        <HowSection />
         <WorkflowSection />
         <ComparisonSection />
         <EducationSection />
