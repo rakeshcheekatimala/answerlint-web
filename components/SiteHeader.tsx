@@ -14,6 +14,7 @@ const navKeys = [
 
 const toolKeys = [
   { href: "/playground", key: "playground" as const },
+  { href: "/tools/ai-visibility", key: "aiVisibility" as const },
   { href: "/tools/business-aware-scan", key: "businessScan" as const },
   { href: "/tools/llms-txt", key: "llmsTxt" as const },
 ];
