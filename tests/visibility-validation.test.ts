@@ -36,4 +36,19 @@ describe("AI Visibility intake validation", () => {
       parseVisibilityIntake({ ...validInput, brandUrl: "file:///etc/passwd" }),
     ).toThrow(InvalidVisibilityInputError);
   });
+
+  it("rejects surfaces that are not supported by the closed beta", () => {
+    expect(() =>
+      parseVisibilityIntake({ ...validInput, surfaces: ["perplexity"] }),
+    ).toThrow(InvalidVisibilityInputError);
+  });
+
+  it("requires web search for every controlled beta run", () => {
+    expect(() =>
+      parseVisibilityIntake({
+        ...validInput,
+        runtimePolicy: { ...defaultRuntimePolicy(), searchMode: "model_only" },
+      }),
+    ).toThrow(InvalidVisibilityInputError);
+  });
 });

@@ -6,15 +6,21 @@ const SOURCE_SNAPSHOT_LIMIT = 80_000;
 
 /**
  * Verifies a cited public URL independently of the provider response. This is
- * intentionally conservative: an inaccessible source or one that does not
- * mention the asserted entity cannot support an actionable recommendation.
+ * intentionally conservative: resolving a URL is not the same as proving a
+ * proposition. A readable source stays `citation_resolved` until an explicit,
+ * independently supplied claim is found in the text.
  */
 export async function verifyCitationSource(input: {
   url: string;
   title?: string;
   excerpt?: string;
   /** The entity the specific citation should substantiate. */
-  expectedEntities: string[];
+  expectedEntities?: string[];
+  /**
+   * A reviewed, exact claim or claim fragment. Provider annotations and a
+   * brand-name match are deliberately not promoted into semantic support.
+   */
+  expectedClaims?: string[];
   sourceType: CitationEvidence["sourceType"];
 }): Promise<{ citation: CitationEvidence; snapshot: string | null }> {
   const canonicalUrl = canonicalizeEvidenceUrl(input.url);
@@ -40,9 +46,12 @@ export async function verifyCitationSource(input: {
 
     const snapshot = (await response.text()).slice(0, SOURCE_SNAPSHOT_LIMIT);
     const sourceText = visibleText(snapshot);
-    const supportsClaim = input.expectedEntities.some((entity) =>
-      sourceText.includes(entity.toLocaleLowerCase()),
-    );
+    const entityMatches =
+      !input.expectedEntities?.length ||
+      input.expectedEntities.some((entity) => containsReadableTerm(sourceText, entity));
+    const supportsClaim =
+      entityMatches &&
+      (input.expectedClaims ?? []).some((claim) => containsReadableTerm(sourceText, claim));
     return {
       citation: {
         url: input.url,
@@ -51,6 +60,7 @@ export async function verifyCitationSource(input: {
         excerpt: input.excerpt ?? null,
         sourceType: input.sourceType,
         resolved: true,
+        verificationStatus: supportsClaim ? "claim_supported" : "citation_resolved",
         supportsClaim,
       },
       snapshot,
@@ -58,6 +68,13 @@ export async function verifyCitationSource(input: {
   } catch {
     return { citation: unverifiedCitation(input, canonicalUrl), snapshot: null };
   }
+}
+
+function containsReadableTerm(sourceText: string, expected: string) {
+  const normalized = expected.toLocaleLowerCase().replace(/\s+/g, " ").trim();
+  if (!normalized) return false;
+  const escaped = normalized.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(^|[^\\p{L}\\p{N}])${escaped}(?=$|[^\\p{L}\\p{N}])`, "iu").test(sourceText);
 }
 
 /**
@@ -92,6 +109,7 @@ function unverifiedCitation(
     excerpt: input.excerpt ?? null,
     sourceType: input.sourceType === "owned" ? "owned" : "unverified",
     resolved: false,
+    verificationStatus: "unresolved",
     supportsClaim: false,
   };
 }

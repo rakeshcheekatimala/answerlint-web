@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { checkGlobalRateLimit } from "@/lib/net/global-rate-limit";
 import { getClientKey } from "@/lib/net/rate-limit";
 import { createVisibilityProjectDraft } from "@/lib/visibility/planner";
+import { isVisibilityEnabled } from "@/lib/visibility/feature-flag";
 import { storeVisibilityProjectBestEffort } from "@/lib/visibility/storage";
 import {
   InvalidVisibilityInputError,
@@ -12,6 +13,9 @@ import {
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
+  if (!isVisibilityEnabled()) {
+    return NextResponse.json({ error: "AI Visibility beta is not enabled." }, { status: 404 });
+  }
   const rate = await checkGlobalRateLimit(
     getClientKey(request, "visibility:project-create"),
     { limit: 6, windowMs: 60_000 },

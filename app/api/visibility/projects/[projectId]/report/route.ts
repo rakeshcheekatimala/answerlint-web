@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { checkGlobalRateLimit } from "@/lib/net/global-rate-limit";
 import { getClientKey } from "@/lib/net/rate-limit";
 import { buildVisibilityWorkspaceReport } from "@/lib/visibility/reporting";
+import { isVisibilityEnabled } from "@/lib/visibility/feature-flag";
 import { VISIBILITY_PROJECT_TOKEN_HEADER } from "@/lib/visibility/constants";
 import {
   getVisibilityEvidence,
@@ -17,6 +18,9 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ projectId: string }> },
 ) {
+  if (!isVisibilityEnabled()) {
+    return NextResponse.json({ error: "AI Visibility beta is not enabled." }, { status: 404 });
+  }
   const rate = await checkGlobalRateLimit(
     getClientKey(request, "visibility:report"),
     { limit: 60, windowMs: 60_000 },

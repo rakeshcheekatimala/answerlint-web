@@ -20,7 +20,9 @@ export async function storeVisibilityTextArtifact(input: {
     .from(VISIBILITY_ARTIFACT_BUCKET)
     .upload(path, Buffer.from(input.text, "utf8"), {
       contentType: "text/plain; charset=utf-8",
-      upsert: false,
+      // Run IDs are deterministic for retry safety. Replaying the same durable
+      // step replaces only that exact immutable run path.
+      upsert: true,
     });
 
   if (error) throw new Error(`Unable to store evidence artifact: ${error.message}`);

@@ -52,6 +52,7 @@ describe("AI Visibility reporting", () => {
             excerpt: "Rival",
             sourceType: "competitor" as const,
             resolved: true,
+            verificationStatus: "claim_supported" as const,
             supportsClaim: true,
           },
         ],
@@ -61,7 +62,7 @@ describe("AI Visibility reporting", () => {
     const report = buildVisibilityWorkspaceReport(project, evidence);
 
     expect(report.metrics[0]).toMatchObject({
-      label: "Qualified Answer Visibility",
+      label: "Verified mention rate",
       value: 0,
     });
     expect(report.actions).toHaveLength(1);
@@ -116,6 +117,50 @@ describe("AI Visibility reporting", () => {
     expect(report.actionQueueMessage).toContain("not yet strong enough");
   });
 
+  it("does not promote a URL resolution into semantic claim support", () => {
+    const project = createVisibilityProjectDraft(intake);
+    const prompt = project.prompts[0];
+    const topic = project.topics[0];
+    const report = buildVisibilityWorkspaceReport(project, {
+      runs: [1, 2, 3].map((repetition) => ({
+        runId: `resolved-${repetition}`,
+        promptId: prompt.id,
+        topicId: topic.id,
+        surface: "chatgpt_search" as const,
+        market: "US",
+        language: "en",
+        observation: {
+          runId: `resolved-${repetition}`,
+          answerObserved: true,
+          brandMentioned: false,
+          competitorMentions: ["Rival"],
+          recommendationStrength: "none" as const,
+          rankedPosition: null,
+          citations: [],
+          confidence: "insufficient" as const,
+          claimVerified: false,
+          signal: "Observed.",
+        },
+        citations: [{
+          url: "https://rival.example/comparison",
+          canonicalUrl: "https://rival.example/comparison",
+          title: "Rival comparison",
+          excerpt: null,
+          sourceType: "competitor" as const,
+          resolved: true,
+          verificationStatus: "citation_resolved" as const,
+          supportsClaim: false,
+        }],
+      })),
+    });
+
+    expect(report.actions).toEqual([]);
+    expect(report.metrics.map((metric) => metric.label)).toEqual([
+      "Verified mention rate",
+      "Owned citation share",
+    ]);
+  });
+
   it("exposes answer and source rows without promoting no-evidence metrics", () => {
     const project = createVisibilityProjectDraft(intake);
     const prompt = project.prompts[0];
@@ -159,7 +204,7 @@ describe("AI Visibility reporting", () => {
       ],
     });
 
-    expect(report.measurementCoverage).toMatchObject({ completedRuns: 1, plannedRuns: 9 });
+    expect(report.measurementCoverage).toMatchObject({ completedRuns: 1, plannedRuns: 24 });
     expect(report.evidenceRows[0]).toMatchObject({
       prompt: prompt.text,
       answerExcerpt: "Example is mentioned in this answer.",

@@ -5,6 +5,7 @@ import { visibilityBenchmarkRequested } from "@/lib/inngest/functions/visibility
 import { checkGlobalRateLimit } from "@/lib/net/global-rate-limit";
 import { getClientKey } from "@/lib/net/rate-limit";
 import { configuredVisibilitySurfaces } from "@/lib/visibility/adapters/registry";
+import { isVisibilityEnabled } from "@/lib/visibility/feature-flag";
 import {
   MAX_VISIBILITY_RUNS_PER_BENCHMARK,
   VISIBILITY_PROJECT_TOKEN_HEADER,
@@ -22,6 +23,9 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ projectId: string }> },
 ) {
+  if (!isVisibilityEnabled()) {
+    return NextResponse.json({ error: "AI Visibility beta is not enabled." }, { status: 404 });
+  }
   const rate = await checkGlobalRateLimit(
     getClientKey(request, "visibility:benchmark"),
     { limit: 3, windowMs: 60_000 },

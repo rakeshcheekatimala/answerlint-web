@@ -9,6 +9,9 @@ export const VISIBILITY_SURFACES = [
 
 export type VisibilitySurface = (typeof VISIBILITY_SURFACES)[number];
 
+/** The closed beta exposes one evidence-capable surface, deliberately. */
+export const SUPPORTED_VISIBILITY_SURFACES = ["chatgpt_search"] as const satisfies readonly VisibilitySurface[];
+
 /**
  * A score only makes sense in the context of how it was collected. These lanes
  * are intentionally never merged into a single visibility percentage.
@@ -40,30 +43,6 @@ export const VISIBILITY_SURFACE_DEFINITIONS: VisibilitySurfaceDefinition[] = [
     measurementLane: "controlled_run",
     availability: "available",
     description: "A repeatable, recorded API run. It is not presented as a consumer-product rank.",
-  },
-  {
-    surface: "perplexity",
-    label: "Perplexity",
-    shortLabel: "Perplexity",
-    measurementLane: "controlled_run",
-    availability: "coming_soon",
-    description: "Available once a licensed adapter meets the same evidence contract.",
-  },
-  {
-    surface: "google_ai_overview",
-    label: "Google AI features",
-    shortLabel: "Google AI",
-    measurementLane: "native_observed",
-    availability: "coming_soon",
-    description: "Planned as separately labelled Search Console evidence, not a third-party rank estimate.",
-  },
-  {
-    surface: "claude",
-    label: "Claude web search",
-    shortLabel: "Claude",
-    measurementLane: "controlled_run",
-    availability: "coming_soon",
-    description: "Available once a provider contract and raw-evidence adapter are configured.",
   },
 ];
 
@@ -186,6 +165,8 @@ export type CitationEvidence = {
   excerpt: string | null;
   sourceType: "owned" | "earned" | "competitor" | "unverified";
   resolved: boolean;
+  /** A URL can resolve before its readable text establishes the required claim. */
+  verificationStatus?: "unresolved" | "citation_resolved" | "claim_supported";
   supportsClaim: boolean;
 };
 
@@ -205,7 +186,7 @@ export type RunManifest = {
   sourceManifestArtifactPath: string | null;
   parserVersion: string;
   parserStatus: "pending" | "parsed" | "failed";
-  status: "queued" | "running" | "complete" | "failed";
+  status: "queued" | "running" | "complete" | "partial" | "failed";
 };
 
 export type AnswerObservation = {

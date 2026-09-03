@@ -38,6 +38,13 @@ export function assessObservation(input: {
   const citations = input.citations.map((citation) => ({
     ...citation,
     canonicalUrl: citation.canonicalUrl ?? canonicalizeEvidenceUrl(citation.url),
+    verificationStatus:
+      citation.verificationStatus ??
+      (citation.resolved
+        ? citation.supportsClaim
+          ? "claim_supported"
+          : "citation_resolved"
+        : "unresolved"),
   }));
   const citationExtracted = citations.some((citation) => Boolean(citation.canonicalUrl));
   const sourceResolved = citations.some(

@@ -8,16 +8,19 @@ import { storeVisibilityTextArtifact } from "@/lib/visibility/artifacts";
 import {
   MAX_VISIBILITY_CITATIONS_PER_RUN,
   MAX_VISIBILITY_RUNS_PER_BENCHMARK,
+  MAX_VISIBILITY_SOURCE_FETCHES_PER_BENCHMARK,
 } from "@/lib/visibility/constants";
 import { assessObservation } from "@/lib/visibility/evidence";
 import { parseAnswerSignals } from "@/lib/visibility/observation-parser";
 import { buildVisibilityWorkspaceReport } from "@/lib/visibility/reporting";
 import { verifyCitationSource } from "@/lib/visibility/source-verification";
+import { isVisibilityEnabled } from "@/lib/visibility/feature-flag";
 import {
   getVisibilityProjectForExecution,
   getVisibilityEvidence,
   replaceVisibilityActions,
   storeVisibilityRunEvidence,
+  storeVisibilityRunFailure,
   updateVisibilityProjectStateForExecution,
 } from "@/lib/visibility/storage";
 import type { RunManifest, VisibilityProject } from "@/lib/visibility/types";
@@ -43,6 +46,9 @@ export const runVisibilityBenchmark = inngest.createFunction(
     triggers: [{ event: visibilityBenchmarkRequested }],
   },
   async ({ event, step }) => {
+    if (!isVisibilityEnabled()) {
+      return { projectId: event.data.projectId, runs: 0, status: "blocked" };
+    }
     const project = await step.run("load approved project", () =>
       getVisibilityProjectForExecution(event.data.projectId),
     );
@@ -76,11 +82,15 @@ export const runVisibilityBenchmark = inngest.createFunction(
         );
       }
 
+      let remainingSourceFetches = MAX_VISIBILITY_SOURCE_FETCHES_PER_BENCHMARK;
+      const outcomes: Array<{ status: "complete" | "partial" | "failed"; sourceFetches: number }> = [];
       for (const plan of plans) {
-        await step.run(
+        const outcome = await step.run(
           `execute-${plan.prompt.id}-${plan.surface}-${plan.repetition}`,
-          () => executePlan(project, plan),
+          () => executePlan(project, plan, remainingSourceFetches),
         );
+        outcomes.push(outcome);
+        remainingSourceFetches -= outcome.sourceFetches;
       }
 
       const actions = await step.run("build verified Action Queue", async () => {
@@ -97,7 +107,11 @@ export const runVisibilityBenchmark = inngest.createFunction(
       await step.run("mark benchmark complete", () =>
         updateVisibilityProjectStateForExecution(project.id, "completed"),
       );
-      return { projectId: project.id, runs: plans.length, status: "completed" };
+      return {
+        projectId: project.id,
+        runs: plans.length,
+        status: outcomes.some((outcome) => outcome.status !== "complete") ? "partial" : "completed",
+      };
     } catch (error) {
       await step.run("mark benchmark failed", () =>
         updateVisibilityProjectStateForExecution(project.id, "failed"),
@@ -110,9 +124,10 @@ export const runVisibilityBenchmark = inngest.createFunction(
 async function executePlan(
   project: VisibilityProject,
   plan: { prompt: VisibilityProject["prompts"][number]; surface: RunManifest["surface"]; repetition: number },
+  remainingSourceFetches: number,
 ) {
   const adapter = getVisibilitySurfaceAdapter(plan.surface);
-  const runId = crypto.randomUUID();
+  const runId = deterministicRunId(project.id, plan.prompt.id, plan.surface, plan.repetition);
   const runAt = new Date().toISOString();
   const draftManifest: RunManifest = {
     id: runId,
@@ -132,100 +147,128 @@ async function executePlan(
     parserStatus: "pending",
     status: "running",
   };
-  const result = await adapter.execute({
-    projectId: project.id,
-    manifest: draftManifest,
-    prompt: plan.prompt.text,
-  });
-  const rawAnswerArtifactPath = await storeVisibilityTextArtifact({
-    projectId: project.id,
-    runId,
-    kind: "raw-answer",
-    text: result.rawAnswer,
-  });
-  const sourceManifestArtifactPath = await storeVisibilityTextArtifact({
-    projectId: project.id,
-    runId,
-    kind: "provider-sources",
-    text: JSON.stringify(
-      {
-        citedUrls: result.citations,
-        consultedSources: result.sources,
-      },
-      null,
-      2,
-    ),
-  });
-  const ownedHost = new URL(project.intake.brandUrl).hostname;
-  const competitorHosts = project.intake.competitors.flatMap((competitor) => {
-    try {
-      return competitor.url ? [new URL(competitor.url).hostname] : [];
-    } catch {
-      return [];
-    }
-  });
-  const verifiedSources = await Promise.all(
-    result.citations.slice(0, MAX_VISIBILITY_CITATIONS_PER_RUN).map((citation) => {
-      const source = citationSourceContext(
-        citation.url,
-        project,
-        ownedHost,
-        competitorHosts,
-      );
-      return verifyCitationSource({
-        ...citation,
-        expectedEntities: source.expectedEntities,
-        sourceType: source.sourceType,
-      });
-    }),
-  );
-  const sourceArtifactPaths = await Promise.all(
-    verifiedSources.map((source, index) =>
-      source.snapshot
-        ? storeVisibilityTextArtifact({
-            projectId: project.id,
-            runId,
-            kind: "source-snapshot",
-            sequence: index + 1,
-            text: source.snapshot,
-          })
-        : Promise.resolve(null),
-    ),
-  );
-  const citations = verifiedSources.map((source) => source.citation);
-  const parsedSignals = parseAnswerSignals({
-    rawAnswer: result.rawAnswer,
-    brandName: project.intake.brandName,
-    competitors: project.intake.competitors.map((competitor) => competitor.name),
-  });
-  const observation = assessObservation({
-    runId,
-    rawAnswer: result.rawAnswer,
-    brandMentioned: parsedSignals.brandMentioned,
-    competitorMentions: parsedSignals.competitorMentions,
-    recommendationStrength: parsedSignals.recommendationStrength,
-    rankedPosition: parsedSignals.rankedPosition,
-    citations,
-    // Aggregation validates repeat confidence after all manifest rows exist.
-    completedRepeatCount: 1,
-    requiredRepeatCount: project.intake.runtimePolicy.repeatRuns,
-  });
+  try {
+    const result = await adapter.execute({
+      projectId: project.id,
+      manifest: draftManifest,
+      prompt: plan.prompt.text,
+    });
+    const rawAnswerArtifactPath = await storeVisibilityTextArtifact({
+      projectId: project.id,
+      runId,
+      kind: "raw-answer",
+      text: result.rawAnswer,
+    });
+    const sourceManifestArtifactPath = await storeVisibilityTextArtifact({
+      projectId: project.id,
+      runId,
+      kind: "provider-sources",
+      text: JSON.stringify(
+        {
+          citedUrls: result.citations,
+          consultedSources: result.sources,
+        },
+        null,
+        2,
+      ),
+    });
+    const ownedHost = new URL(project.intake.brandUrl).hostname;
+    const competitorHosts = project.intake.competitors.flatMap((competitor) => {
+      try {
+        return competitor.url ? [new URL(competitor.url).hostname] : [];
+      } catch {
+        return [];
+      }
+    });
+    const verificationLimit = Math.max(
+      0,
+      Math.min(MAX_VISIBILITY_CITATIONS_PER_RUN, remainingSourceFetches),
+    );
+    const citationsToVerify = result.citations.slice(0, verificationLimit);
+    const isPartial = citationsToVerify.length < result.citations.length;
+    const verifiedSources = await Promise.all(
+      citationsToVerify.map((citation) => {
+        const source = citationSourceContext(
+          citation.url,
+          project,
+          ownedHost,
+          competitorHosts,
+        );
+        return verifyCitationSource({
+          ...citation,
+          expectedEntities: source.expectedEntities,
+          sourceType: source.sourceType,
+        });
+      }),
+    );
+    const sourceArtifactPaths = await Promise.all(
+      verifiedSources.map((source, index) =>
+        source.snapshot
+          ? storeVisibilityTextArtifact({
+              projectId: project.id,
+              runId,
+              kind: "source-snapshot",
+              sequence: index + 1,
+              text: source.snapshot,
+            })
+          : Promise.resolve(null),
+      ),
+    );
+    const citations = verifiedSources.map((source) => source.citation);
+    const parsedSignals = parseAnswerSignals({
+      rawAnswer: result.rawAnswer,
+      brandName: project.intake.brandName,
+      competitors: project.intake.competitors.map((competitor) => competitor.name),
+    });
+    const observation = assessObservation({
+      runId,
+      rawAnswer: result.rawAnswer,
+      brandMentioned: parsedSignals.brandMentioned,
+      competitorMentions: parsedSignals.competitorMentions,
+      recommendationStrength: parsedSignals.recommendationStrength,
+      rankedPosition: parsedSignals.rankedPosition,
+      citations,
+      // Aggregation validates repeat confidence after all manifest rows exist.
+      completedRepeatCount: 1,
+      requiredRepeatCount: project.intake.runtimePolicy.repeatRuns,
+    });
 
-  await storeVisibilityRunEvidence({
-    projectId: project.id,
-    manifest: {
-      ...draftManifest,
-      modelRuntime: result.modelRuntime,
-      rawAnswerArtifactPath,
-      sourceManifestArtifactPath,
-      parserStatus: "parsed",
-      status: "complete",
-    },
-    observation,
-    citations,
-    sourceArtifactPaths,
-    answerExcerpt: result.rawAnswer.slice(0, 1_600),
-  });
+    await storeVisibilityRunEvidence({
+      projectId: project.id,
+      manifest: {
+        ...draftManifest,
+        modelRuntime: result.modelRuntime,
+        rawAnswerArtifactPath,
+        sourceManifestArtifactPath,
+        parserStatus: "parsed",
+        status: isPartial ? "partial" : "complete",
+      },
+      observation,
+      citations,
+      sourceArtifactPaths,
+      answerExcerpt: result.rawAnswer.slice(0, 1_600),
+    });
+    return {
+      status: isPartial ? "partial" as const : "complete" as const,
+      sourceFetches: citationsToVerify.length,
+    };
+  } catch {
+    await storeVisibilityRunFailure({
+      projectId: project.id,
+      manifest: { ...draftManifest, parserStatus: "failed", status: "failed" },
+    });
+    return { status: "failed" as const, sourceFetches: 0 };
+  }
+}
+
+function deterministicRunId(
+  projectId: string,
+  promptId: string,
+  surface: RunManifest["surface"],
+  repetition: number,
+) {
+  const digest = crypto.createHash("sha256").update(`${projectId}:${promptId}:${surface}:${repetition}`).digest("hex");
+  return `${digest.slice(0, 8)}-${digest.slice(8, 12)}-${digest.slice(12, 16)}-${digest.slice(16, 20)}-${digest.slice(20, 32)}`;
 }
 
 function citationSourceContext(

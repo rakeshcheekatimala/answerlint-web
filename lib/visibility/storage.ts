@@ -120,6 +120,7 @@ type EvidenceRunRow = {
   raw_answer_excerpt: string | null;
   raw_answer_artifact_path: string | null;
   source_manifest_artifact_path: string | null;
+  status: "complete" | "partial";
 };
 
 type ObservationRow = {
@@ -142,6 +143,7 @@ type CitationRow = {
   excerpt: string | null;
   source_type: CitationEvidence["sourceType"];
   resolved: boolean;
+  verification_status: NonNullable<CitationEvidence["verificationStatus"]> | null;
   supports_claim: boolean;
 };
 
@@ -450,7 +452,7 @@ export async function storeVisibilityRunEvidence(input: {
   answerExcerpt: string;
 }) {
   const supabase = createSupabaseAdminClient();
-  const { error: runError } = await supabase.from("visibility_runs").insert({
+  const { error: runError } = await supabase.from("visibility_runs").upsert({
     id: input.manifest.id,
     project_id: input.projectId,
     prompt_id: input.manifest.promptId,
@@ -469,8 +471,14 @@ export async function storeVisibilityRunEvidence(input: {
     parser_version: input.manifest.parserVersion,
     parser_status: input.manifest.parserStatus,
     status: input.manifest.status,
-  });
+  }, { onConflict: "id" });
   if (runError) throw new Error(`Unable to store run manifest: ${runError.message}`);
+
+  const { error: clearCitationsError } = await supabase
+    .from("visibility_citations")
+    .delete()
+    .eq("run_id", input.manifest.id);
+  if (clearCitationsError) throw new Error(`Unable to refresh run citations: ${clearCitationsError.message}`);
 
   if (input.citations.length) {
     const { error: citationsError } = await supabase.from("visibility_citations").insert(
@@ -482,6 +490,13 @@ export async function storeVisibilityRunEvidence(input: {
         excerpt: citation.excerpt,
         source_type: citation.sourceType,
         resolved: citation.resolved,
+        verification_status:
+          citation.verificationStatus ??
+          (citation.resolved
+            ? citation.supportsClaim
+              ? "claim_supported"
+              : "citation_resolved"
+            : "unresolved"),
         supports_claim: citation.supportsClaim,
         source_artifact_path: input.sourceArtifactPaths[index] ?? null,
       })),
@@ -489,7 +504,7 @@ export async function storeVisibilityRunEvidence(input: {
     if (citationsError) throw new Error(`Unable to store citations: ${citationsError.message}`);
   }
 
-  const { error: observationError } = await supabase.from("visibility_observations").insert({
+  const { error: observationError } = await supabase.from("visibility_observations").upsert({
     run_id: input.observation.runId,
     answer_observed: input.observation.answerObserved,
     brand_mentioned: input.observation.brandMentioned,
@@ -499,7 +514,7 @@ export async function storeVisibilityRunEvidence(input: {
     confidence: input.observation.confidence,
     claim_verified: input.observation.claimVerified,
     signal: input.observation.signal,
-  });
+  }, { onConflict: "run_id" });
   if (observationError) {
     throw new Error(`Unable to store answer observation: ${observationError.message}`);
   }
@@ -511,6 +526,41 @@ export async function storeVisibilityRunEvidence(input: {
   if (promptError) throw new Error(`Unable to update prompt status: ${promptError.message}`);
 }
 
+/** Preserve a failed provider attempt so coverage can remain honest on re-read. */
+export async function storeVisibilityRunFailure(input: {
+  projectId: string;
+  manifest: RunManifest;
+}) {
+  const supabase = createSupabaseAdminClient();
+  const { error: runError } = await supabase.from("visibility_runs").upsert({
+    id: input.manifest.id,
+    project_id: input.projectId,
+    prompt_id: input.manifest.promptId,
+    surface: input.manifest.surface,
+    model_runtime: input.manifest.modelRuntime,
+    search_mode: input.manifest.searchMode,
+    market: input.manifest.market,
+    language: input.manifest.language,
+    device: input.manifest.device,
+    session_policy: input.manifest.sessionPolicy,
+    run_at: input.manifest.runAt,
+    repetition: input.manifest.repetition,
+    raw_answer_artifact_path: null,
+    raw_answer_excerpt: null,
+    source_manifest_artifact_path: null,
+    parser_version: input.manifest.parserVersion,
+    parser_status: input.manifest.parserStatus,
+    status: "failed",
+  }, { onConflict: "id" });
+  if (runError) throw new Error(`Unable to store failed run manifest: ${runError.message}`);
+
+  const { error: promptError } = await supabase
+    .from("visibility_prompts")
+    .update({ status: "failed" })
+    .eq("id", input.manifest.promptId);
+  if (promptError) throw new Error(`Unable to update failed prompt status: ${promptError.message}`);
+}
+
 export async function getVisibilityEvidence(
   projectId: string,
   promptTopics: Map<string, string>,
@@ -518,9 +568,9 @@ export async function getVisibilityEvidence(
   const supabase = createSupabaseAdminClient();
   const { data: runs, error: runsError } = await supabase
     .from("visibility_runs")
-    .select("id,prompt_id,surface,market,language,model_runtime,run_at,parser_version,raw_answer_excerpt,raw_answer_artifact_path,source_manifest_artifact_path")
+    .select("id,prompt_id,surface,market,language,model_runtime,run_at,parser_version,raw_answer_excerpt,raw_answer_artifact_path,source_manifest_artifact_path,status")
     .eq("project_id", projectId)
-    .eq("status", "complete");
+    .in("status", ["complete", "partial"]);
   if (runsError) throw new Error(`Unable to load run evidence: ${runsError.message}`);
   const runIds = (runs ?? []).map((run) => (run as EvidenceRunRow).id);
   if (!runIds.length) return { runs: [] };
@@ -532,7 +582,7 @@ export async function getVisibilityEvidence(
       .in("run_id", runIds),
     supabase
       .from("visibility_citations")
-      .select("run_id,url,canonical_url,title,excerpt,source_type,resolved,supports_claim")
+      .select("run_id,url,canonical_url,title,excerpt,source_type,resolved,verification_status,supports_claim")
       .in("run_id", runIds),
   ]);
   if (observationsResult.error || citationsResult.error) {
@@ -556,6 +606,13 @@ export async function getVisibilityEvidence(
         excerpt: citation.excerpt,
         sourceType: citation.source_type,
         resolved: citation.resolved,
+        verificationStatus:
+          citation.verification_status ??
+          (citation.resolved
+            ? citation.supports_claim
+              ? "claim_supported"
+              : "citation_resolved"
+            : "unresolved"),
         supportsClaim: citation.supports_claim,
       },
     ]);
@@ -580,6 +637,7 @@ export async function getVisibilityEvidence(
         answerExcerpt: run.raw_answer_excerpt,
         rawAnswerArtifactPath: run.raw_answer_artifact_path,
         sourceManifestArtifactPath: run.source_manifest_artifact_path,
+        runStatus: run.status,
         observation: {
           runId: observation.run_id,
           answerObserved: observation.answer_observed,

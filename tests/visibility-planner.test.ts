@@ -16,7 +16,7 @@ function intake(overrides: Partial<VisibilityIntake> = {}): VisibilityIntake {
     competitors: [{ name: "Rival", url: "https://rival.example" }],
     markets: ["US"],
     languages: ["en"],
-    surfaces: ["chatgpt_search", "perplexity"],
+    surfaces: ["chatgpt_search"],
     runtimePolicy: defaultRuntimePolicy(),
     ...overrides,
   };
@@ -31,13 +31,14 @@ describe("AI Visibility planning", () => {
       url: "https://example.com/",
       verificationStatus: "pending",
     });
-    expect(project.topics).toHaveLength(3);
-    expect(project.prompts).toHaveLength(3);
-    expect(project.prompts[2]).toMatchObject({
+    expect(project.topics).toHaveLength(4);
+    expect(project.prompts).toHaveLength(8);
+    expect(project.prompts.filter((prompt) => prompt.kind === "comparison")[0]).toMatchObject({
       kind: "comparison",
       competitorEntities: ["Rival"],
       plannedSamples: 3,
     });
+    expect(project.prompts.reduce((total, prompt) => total + prompt.plannedSamples, 0)).toBe(24);
   });
 
   it("requires both human approval gates before a benchmark is ready", () => {

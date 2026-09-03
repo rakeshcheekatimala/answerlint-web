@@ -118,7 +118,7 @@ create table if not exists public.visibility_runs (
   source_manifest_artifact_path text,
   parser_version text not null,
   parser_status text not null check (parser_status in ('pending', 'parsed', 'failed')),
-  status text not null check (status in ('queued', 'running', 'complete', 'failed')),
+  status text not null check (status in ('queued', 'running', 'complete', 'partial', 'failed')),
   created_at timestamptz not null default now(),
   unique (prompt_id, surface, repetition, run_at)
 );
@@ -126,6 +126,9 @@ create table if not exists public.visibility_runs (
 -- Safe upgrades for projects that installed an earlier visibility schema.
 alter table public.visibility_runs add column if not exists raw_answer_excerpt text;
 alter table public.visibility_runs add column if not exists source_manifest_artifact_path text;
+alter table public.visibility_runs drop constraint if exists visibility_runs_status_check;
+alter table public.visibility_runs add constraint visibility_runs_status_check
+  check (status in ('queued', 'running', 'complete', 'partial', 'failed'));
 
 create table if not exists public.visibility_citations (
   id uuid primary key default gen_random_uuid(),
@@ -136,10 +139,21 @@ create table if not exists public.visibility_citations (
   excerpt text,
   source_type text not null check (source_type in ('owned', 'earned', 'competitor', 'unverified')),
   resolved boolean not null default false,
+  verification_status text not null default 'unresolved' check (verification_status in ('unresolved', 'citation_resolved', 'claim_supported')),
   supports_claim boolean not null default false,
   source_artifact_path text,
   created_at timestamptz not null default now()
 );
+
+-- A resolved URL and semantic support are different evidence states. Existing
+-- rows remain backwards-compatible while retaining the conservative default.
+alter table public.visibility_citations
+  add column if not exists verification_status text not null default 'unresolved';
+alter table public.visibility_citations
+  drop constraint if exists visibility_citations_verification_status_check;
+alter table public.visibility_citations
+  add constraint visibility_citations_verification_status_check
+  check (verification_status in ('unresolved', 'citation_resolved', 'claim_supported'));
 
 create table if not exists public.visibility_observations (
   id uuid primary key default gen_random_uuid(),

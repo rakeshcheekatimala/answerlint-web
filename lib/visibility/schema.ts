@@ -2,11 +2,13 @@ import { z } from "zod";
 
 import {
   REVENUE_GOALS,
+  SUPPORTED_VISIBILITY_SURFACES,
   VISIBILITY_SURFACES,
-  type RuntimePolicy,
+  type VisibilitySurface,
 } from "@/lib/visibility/types";
 
 const urlSchema = z.string().trim().url("Enter a complete http(s) URL.").max(2_048);
+const supportedSurfaceSet = new Set<VisibilitySurface>(SUPPORTED_VISIBILITY_SURFACES);
 
 const competitorSchema = z
   .object({
@@ -25,7 +27,9 @@ const competitorSchema = z
   });
 
 const runtimePolicySchema = z.object({
-  searchMode: z.enum(["search_enabled", "model_only"]),
+  searchMode: z.enum(["search_enabled"], {
+    error: "The controlled beta requires web search.",
+  }),
   freshSession: z.boolean(),
   device: z.enum(["desktop", "mobile"]),
   repeatRuns: z.number().int().min(1).max(10),
@@ -52,7 +56,14 @@ export const visibilityIntakeSchema = z.object({
     .array(z.string().trim().regex(/^[a-z]{2}(?:-[A-Z]{2})?$/, "Use a language code."))
     .min(1, "Choose at least one language.")
     .max(10),
-  surfaces: z.array(z.enum(VISIBILITY_SURFACES)).min(1).max(VISIBILITY_SURFACES.length),
+  surfaces: z
+    .array(z.enum(VISIBILITY_SURFACES))
+    .min(1)
+    .max(SUPPORTED_VISIBILITY_SURFACES.length)
+    .refine(
+      (surfaces) => surfaces.every((surface) => supportedSurfaceSet.has(surface)),
+      "Only the OpenAI web-search controlled run is available in this beta.",
+    ),
   runtimePolicy: runtimePolicySchema,
 });
 
@@ -65,7 +76,7 @@ export const visibilityApprovalSchema = z.object({
 
 export type VisibilityApprovalInput = z.infer<typeof visibilityApprovalSchema>;
 
-export function defaultRuntimePolicy(): RuntimePolicy {
+export function defaultRuntimePolicy(): VisibilityIntake["runtimePolicy"] {
   return {
     searchMode: "search_enabled",
     freshSession: true,

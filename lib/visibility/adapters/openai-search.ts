@@ -31,18 +31,25 @@ type OpenAiResponse = {
   model?: string;
 };
 
-/** Official OpenAI Responses API adapter for the ChatGPT Search surface. */
+/** Official OpenAI Responses API adapter for a controlled OpenAI web-search run. */
 export class OpenAiSearchAdapter implements VisibilitySurfaceAdapter {
   readonly surface = "chatgpt_search" as const;
 
   isConfigured() {
-    return Boolean(process.env.OPENAI_API_KEY?.trim());
+    return Boolean(
+      process.env.OPENAI_API_KEY?.trim() &&
+      process.env.OPENAI_VISIBILITY_MODEL?.trim(),
+    );
   }
 
   async execute(request: SurfaceExecutionRequest): Promise<SurfaceExecutionResult> {
     const apiKey = process.env.OPENAI_API_KEY?.trim();
     if (!apiKey) {
-      throw new Error("Missing OPENAI_API_KEY for the ChatGPT Search adapter.");
+      throw new Error("Missing OPENAI_API_KEY for the OpenAI web-search adapter.");
+    }
+    const model = process.env.OPENAI_VISIBILITY_MODEL?.trim();
+    if (!model) {
+      throw new Error("Missing OPENAI_VISIBILITY_MODEL for the controlled OpenAI web-search run.");
     }
 
     const response = await fetch(OPENAI_RESPONSES_URL, {
@@ -52,7 +59,7 @@ export class OpenAiSearchAdapter implements VisibilitySurfaceAdapter {
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        model: process.env.OPENAI_VISIBILITY_MODEL?.trim() || "gpt-5",
+        model,
         store: false,
         ...(request.manifest.searchMode === "search_enabled"
           ? {
@@ -107,7 +114,7 @@ export class OpenAiSearchAdapter implements VisibilitySurfaceAdapter {
 
     return {
       rawAnswer,
-      modelRuntime: payload.model ?? process.env.OPENAI_VISIBILITY_MODEL ?? "gpt-5",
+      modelRuntime: payload.model ?? model,
       citations,
       sources: dedupeSources([...sources, ...citations]),
     };
