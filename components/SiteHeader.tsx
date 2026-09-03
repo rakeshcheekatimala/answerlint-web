@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 
 import { SiteHeaderClient } from "@/components/SiteHeaderClient";
 import { branding } from "@/config/branding";
+import { isVisibilityEnabled } from "@/lib/visibility/feature-flag";
 
 const navKeys = [
   { href: "/docs/getting-started/installation", key: "docs" as const },
@@ -22,7 +23,12 @@ export async function SiteHeader() {
   const t = await getTranslations("Nav");
   const tBrand = await getTranslations("branding");
   const items = navKeys.map(({ href, key }) => ({ href, label: t(key) }));
-  const toolItems = toolKeys.map(({ href, key }) => ({ href, label: t(key) }));
+  const toolItems = [
+    ...(isVisibilityEnabled()
+      ? [{ href: "/tools/ai-visibility", key: "aiVisibility" as const }]
+      : []),
+    ...toolKeys,
+  ].map(({ href, key }) => ({ href, label: t(key) }));
 
   return (
     <SiteHeaderClient
