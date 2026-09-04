@@ -15,7 +15,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "httpx>=0.28.1,<1",
-  "pytest>=8.4.1,<9",
+  "pytest>=9.0.3,<10",
   "pytest-asyncio>=1.1.0,<2",
 ]
 
@@ -37,3 +37,8 @@ asyncio_mode = "auto"
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+
+[tool.uv]
+# CrewAI currently requires ChromaDB at import time. Pin the newest release;
+# this service never starts its server or enables its memory/RAG features.
+override-dependencies = ["chromadb==1.5.9"]

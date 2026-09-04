@@ -1,5 +1,8 @@
 import json
 import time
+import asyncio
+
+import pytest
 
 from fastapi.testclient import TestClient
 
@@ -83,3 +86,28 @@ def test_signed_analysis_is_schema_validated_and_replay_protected(monkeypatch) -
 
     replay = client.post("/v1/analyze", content=body, headers=headers)
     assert replay.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_timed_out_work_keeps_capacity_until_the_thread_finishes(monkeypatch) -> None:
+    semaphore = asyncio.Semaphore(0)
+    monkeypatch.setattr(api, "capacity", semaphore)
+
+    async def finish_later() -> AnalysisResponse:
+        await asyncio.sleep(0.01)
+        return AnalysisResponse(
+            analysis_id="analysis-capacity",
+            project_id="project-capacity",
+            status="insufficient_evidence",
+            model_runtime="test/model",
+            prompt_version="test/1",
+            executive_headline="Analysis finished",
+            executive_summary="The bounded background analysis finished.",
+        )
+
+    task = asyncio.create_task(finish_later())
+    task.add_done_callback(api.release_capacity_when_finished)
+    assert semaphore.locked()
+    await task
+    await asyncio.sleep(0)
+    assert not semaphore.locked()

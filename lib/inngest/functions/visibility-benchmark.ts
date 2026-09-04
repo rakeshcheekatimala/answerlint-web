@@ -38,7 +38,10 @@ import type {
 export const visibilityBenchmarkRequested = eventType(
   "visibility/benchmark.requested",
   {
-    schema: z.object({ projectId: z.string().uuid() }),
+    schema: z.object({
+      projectId: z.string().uuid(),
+      benchmarkId: z.string().uuid(),
+    }),
   },
 );
 
@@ -52,7 +55,8 @@ export const runVisibilityBenchmark = inngest.createFunction(
     id: "visibility-benchmark",
     name: "Run AI visibility benchmark",
     retries: 3,
-    concurrency: { limit: 2, key: "event.data.projectId", scope: "env" },
+    idempotency: "event.data.benchmarkId",
+    concurrency: { limit: 1, key: "event.data.projectId", scope: "env" },
     triggers: [{ event: visibilityBenchmarkRequested }],
   },
   async ({ event, step }) => {
@@ -65,12 +69,16 @@ export const runVisibilityBenchmark = inngest.createFunction(
     if (project.state !== "benchmark_queued") {
       throw new Error("Visibility project is not queued for benchmarking.");
     }
+    if (project.benchmarkProgress?.benchmarkId !== event.data.benchmarkId) {
+      throw new Error("The queued benchmark cohort does not match this event.");
+    }
 
     await step.run("mark benchmark running", () =>
       updateVisibilityProjectStateForExecution(project.id, "benchmarking"),
     );
 
     let progressSnapshot: VisibilityBenchmarkProgress = project.benchmarkProgress ?? {
+      benchmarkId: event.data.benchmarkId,
       plannedRuns: 0,
       completedRuns: 0,
       failedRuns: 0,
@@ -130,6 +138,7 @@ export const runVisibilityBenchmark = inngest.createFunction(
       }
 
       progressSnapshot = {
+        benchmarkId: event.data.benchmarkId,
         plannedRuns: plans.length,
         completedRuns: 0,
         failedRuns: 0,
@@ -150,11 +159,18 @@ export const runVisibilityBenchmark = inngest.createFunction(
       for (const plan of plans) {
         const outcome = await step.run(
           `execute-${plan.prompt.id}-${plan.surface}-${plan.repetition}`,
-          () => executePlan(project, plan, remainingSourceFetches),
+          () =>
+            executePlan(
+              project,
+              event.data.benchmarkId,
+              plan,
+              remainingSourceFetches,
+            ),
         );
         outcomes.push(outcome);
         remainingSourceFetches -= outcome.sourceFetches;
         progressSnapshot = {
+          benchmarkId: event.data.benchmarkId,
           plannedRuns: plans.length,
           completedRuns: outcomes.filter((item) => item.status !== "failed")
             .length,
@@ -172,6 +188,7 @@ export const runVisibilityBenchmark = inngest.createFunction(
       }
 
       progressSnapshot = {
+        benchmarkId: event.data.benchmarkId,
         plannedRuns: plans.length,
         completedRuns: outcomes.filter((item) => item.status !== "failed")
           .length,
@@ -272,6 +289,7 @@ function safeBenchmarkFailureMessage(error: unknown) {
 
 async function executePlan(
   project: VisibilityProject,
+  benchmarkId: string,
   plan: {
     prompt: VisibilityProject["prompts"][number];
     surface: RunManifest["surface"];
@@ -282,6 +300,7 @@ async function executePlan(
   const adapter = getVisibilitySurfaceAdapter(plan.surface);
   const runId = deterministicRunId(
     project.id,
+    benchmarkId,
     plan.prompt.id,
     plan.surface,
     plan.repetition,
@@ -426,13 +445,14 @@ async function executePlan(
 
 function deterministicRunId(
   projectId: string,
+  benchmarkId: string,
   promptId: string,
   surface: RunManifest["surface"],
   repetition: number,
 ) {
   const digest = crypto
     .createHash("sha256")
-    .update(`${projectId}:${promptId}:${surface}:${repetition}`)
+    .update(`${projectId}:${benchmarkId}:${promptId}:${surface}:${repetition}`)
     .digest("hex");
   return `${digest.slice(0, 8)}-${digest.slice(8, 12)}-${digest.slice(12, 16)}-${digest.slice(16, 20)}-${digest.slice(20, 32)}`;
 }

@@ -74,11 +74,6 @@ function readToken(projectId: string) {
   return window.localStorage.getItem(tokenStorageKey(projectId)) ?? undefined;
 }
 
-function storeToken(projectId: string, token: string | undefined) {
-  if (typeof window === "undefined" || !token) return;
-  window.localStorage.setItem(tokenStorageKey(projectId), token);
-}
-
 export function VisibilityWorkspaceClient({ initialProjectId }: Props) {
   const [project, setProject] = useState<VisibilityProject | null>(null);
   const [error, setError] = useState("");
@@ -108,14 +103,9 @@ export function VisibilityWorkspaceClient({ initialProjectId }: Props) {
   );
   const workspaceReport = loadedReport ?? plannedReport;
 
-  const loadReport = useCallback(async (projectId: string, token: string) => {
+  const loadReport = useCallback(async (projectId: string) => {
     try {
-      const response = await fetch(
-        `/api/visibility/projects/${projectId}/report`,
-        {
-          headers: { [VISIBILITY_PROJECT_TOKEN_HEADER]: token },
-        },
-      );
+      const response = await fetch(`/api/visibility/projects/${projectId}/report`);
       const payload = (await response.json()) as {
         report?: VisibilityWorkspaceReport;
       };
@@ -126,10 +116,12 @@ export function VisibilityWorkspaceClient({ initialProjectId }: Props) {
   }, []);
 
   const loadProject = useCallback(
-    async (projectId: string, token: string) => {
+    async (projectId: string, legacyToken?: string) => {
       try {
         const response = await fetch(`/api/visibility/projects/${projectId}`, {
-          headers: { [VISIBILITY_PROJECT_TOKEN_HEADER]: token },
+          headers: legacyToken
+            ? { [VISIBILITY_PROJECT_TOKEN_HEADER]: legacyToken }
+            : undefined,
         });
         const payload = (await response.json()) as {
           project?: VisibilityProject;
@@ -137,8 +129,9 @@ export function VisibilityWorkspaceClient({ initialProjectId }: Props) {
         };
         if (!response.ok || !payload.project)
           throw new Error(payload.error ?? "Project could not be loaded.");
-        setProject({ ...payload.project, editToken: token });
-        void loadReport(projectId, token);
+        setProject(payload.project);
+        if (legacyToken) window.localStorage.removeItem(tokenStorageKey(projectId));
+        void loadReport(projectId);
       } catch (loadError) {
         setError(
           loadError instanceof Error
@@ -153,27 +146,20 @@ export function VisibilityWorkspaceClient({ initialProjectId }: Props) {
   useEffect(() => {
     if (!initialProjectId) return;
     const token = readToken(initialProjectId);
-    if (!token) {
-      setError(
-        "This workspace needs its browser ownership token. Create it in this browser, or sign in once accounts are enabled.",
-      );
-      return;
-    }
     void loadProject(initialProjectId, token);
   }, [initialProjectId, loadProject]);
 
   useEffect(() => {
     if (
-      !project?.editToken ||
-      !["benchmark_queued", "benchmarking"].includes(project.state)
+      !project || !["benchmark_queued", "benchmarking"].includes(project.state)
     )
       return;
     const timer = window.setInterval(
-      () => void loadProject(project.id, project.editToken as string),
+      () => void loadProject(project.id),
       8_000,
     );
     return () => window.clearInterval(timer);
-  }, [loadProject, project?.editToken, project?.id, project?.state]);
+  }, [loadProject, project]);
 
   function updateUseCases(value: string) {
     setUseCasesText(value);
@@ -226,7 +212,6 @@ export function VisibilityWorkspaceClient({ initialProjectId }: Props) {
         setProject(payload.project);
         setLoadedReport(null);
         setActiveView("overview");
-        storeToken(payload.project.id, payload.project.editToken);
         if (payload.project.storageStatus === "stored") {
           window.history.replaceState(
             null,
@@ -258,7 +243,7 @@ export function VisibilityWorkspaceClient({ initialProjectId }: Props) {
     setNotice("");
     startSave(async () => {
       try {
-        if (next.storageStatus !== "stored" || !next.editToken) {
+        if (next.storageStatus !== "stored") {
           setProject(next);
           setLoadedReport(null);
           setNotice(
@@ -270,7 +255,6 @@ export function VisibilityWorkspaceClient({ initialProjectId }: Props) {
           method: "PATCH",
           headers: {
             "content-type": "application/json",
-            [VISIBILITY_PROJECT_TOKEN_HEADER]: next.editToken,
           },
           body: JSON.stringify(approval),
         });
@@ -280,7 +264,7 @@ export function VisibilityWorkspaceClient({ initialProjectId }: Props) {
         };
         if (!response.ok || !payload.project)
           throw new Error(payload.error ?? "Approval could not be saved.");
-        setProject({ ...payload.project, editToken: next.editToken });
+        setProject(payload.project);
         setLoadedReport(null);
         setNotice(successMessage);
       } catch (saveError) {
@@ -370,7 +354,7 @@ export function VisibilityWorkspaceClient({ initialProjectId }: Props) {
 
   function queueBenchmark() {
     if (!project) return;
-    if (project.storageStatus !== "stored" || !project.editToken) {
+    if (project.storageStatus !== "stored") {
       setError("Connect Supabase storage before running a durable benchmark.");
       return;
     }
@@ -382,9 +366,6 @@ export function VisibilityWorkspaceClient({ initialProjectId }: Props) {
           `/api/visibility/projects/${project.id}/benchmark`,
           {
             method: "POST",
-            headers: {
-              [VISIBILITY_PROJECT_TOKEN_HEADER]: project.editToken as string,
-            },
           },
         );
         const payload = (await response.json()) as {
@@ -393,7 +374,7 @@ export function VisibilityWorkspaceClient({ initialProjectId }: Props) {
         };
         if (!response.ok || !payload.project)
           throw new Error(payload.error ?? "Benchmark could not be queued.");
-        setProject({ ...payload.project, editToken: project.editToken });
+        setProject(payload.project);
         setLoadedReport(null);
         setNotice(
           "Controlled benchmark queued. The workspace will refresh as answer and source evidence arrives.",

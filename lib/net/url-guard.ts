@@ -227,32 +227,66 @@ export async function safeFetch(
 
       if (response.status >= 300 && response.status < 400) {
         const location = response.headers.get("location");
-        if (!location) return response;
+        if (!location) return await enforceResponseSize(response, maxBytes);
 
         redirects += 1;
         if (redirects > maxRedirects) {
+          await response.body?.cancel();
           throw new UnsafeUrlError("Too many redirects while fetching the URL.");
         }
 
         // Re-validate the redirect target before following it.
+        const redirectUrl = new URL(location, currentUrl).toString();
+        await response.body?.cancel();
         currentUrl = await assertPublicUrl(
-          new URL(location, currentUrl).toString(),
+          redirectUrl,
           resolver,
         );
         continue;
       }
 
-      return enforceResponseSize(response, maxBytes);
+      return await enforceResponseSize(response, maxBytes);
     }
   } finally {
     clearTimeout(timer);
   }
 }
 
-function enforceResponseSize(response: Response, maxBytes: number): Response {
+async function enforceResponseSize(response: Response, maxBytes: number): Promise<Response> {
   const declared = Number(response.headers.get("content-length") ?? "");
   if (Number.isFinite(declared) && declared > maxBytes) {
+    await response.body?.cancel();
     throw new UnsafeUrlError("The response is too large to process.");
   }
-  return response;
+  if (!response.body) return response;
+
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let received = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      received += value.byteLength;
+      if (received > maxBytes) {
+        await reader.cancel();
+        throw new UnsafeUrlError("The response is too large to process.");
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  const body = new Uint8Array(received);
+  let offset = 0;
+  for (const chunk of chunks) {
+    body.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return new Response(body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+  });
 }
