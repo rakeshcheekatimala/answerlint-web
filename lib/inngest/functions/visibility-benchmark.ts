@@ -61,11 +61,24 @@ export const runVisibilityBenchmark = inngest.createFunction(
     );
 
     try {
+      // Inngest replays the function body between durable steps. Read provider
+      // configuration inside a step so the check runs in the same server
+      // context as the provider work, rather than during replay planning.
+      const configuredSurfaces = await step.run("validate configured surfaces", () => {
+        const configured = project.intake.surfaces.filter((surface) =>
+          getVisibilitySurfaceAdapter(surface).isConfigured(),
+        );
+        if (!configured.length) {
+          throw new Error("No configured surface is selected for this benchmark.");
+        }
+        return configured;
+      });
+      const configuredSurfaceSet = new Set(configuredSurfaces);
       const plans = project.prompts
         .filter((prompt) => project.topics.some((topic) => topic.id === prompt.topicId && topic.included))
         .flatMap((prompt) =>
           prompt.surfaces
-            .filter((surface) => getVisibilitySurfaceAdapter(surface).isConfigured())
+            .filter((surface) => configuredSurfaceSet.has(surface))
             .flatMap((surface) =>
               Array.from({ length: prompt.plannedSamples }, (_, index) => ({
                 prompt,
