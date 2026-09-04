@@ -17,7 +17,7 @@ class Settings(BaseSettings):
 
     signing_secret: str = Field(min_length=32)
     key_id: str = Field(default="primary", min_length=1, max_length=64)
-    llm_model: str = Field(default="openai/gpt-5-mini", min_length=3, max_length=200)
+    llm_model: str = Field(default="openai/gpt-5.6-terra", min_length=3, max_length=200)
     llm_api_key: str = Field(min_length=1)
     llm_base_url: str | None = None
     temperature: float = Field(default=0, ge=0, le=1)
