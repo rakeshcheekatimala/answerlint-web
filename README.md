@@ -119,3 +119,21 @@ https://your-production-domain.com
 https://your-production-domain.com/auth/confirm
 https://your-production-domain.com/tools/geo-audit/report
 ```
+
+## AI Visibility evidence loop
+
+Run [`supabase/visibility.sql`](supabase/visibility.sql) before enabling the
+workspace. The benchmark worker requires Supabase, Inngest, and the OpenAI
+Responses API variables documented in [`.env.example`](.env.example).
+
+The optional CrewAI service in
+[`services/visibility-crew`](services/visibility-crew/README.md) interprets
+verified evidence into a brand-voice decision brief. It never owns provider
+measurement or evidence storage. Start it locally on port 8010, use the same
+32+ character signing secret in both services, and set
+`VISIBILITY_CREW_MODE=best_effort`. Use `required` only when deployment health
+checks and alerting are in place.
+
+The Inngest endpoint streams with a 300-second Vercel ceiling and checkpoints
+at 240 seconds. Keep `OPENAI_VISIBILITY_TIMEOUT_MS` below that ceiling so one
+slow upstream search cannot strand a benchmark without a visible outcome.

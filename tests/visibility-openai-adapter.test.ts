@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { OpenAiSearchAdapter } from "@/lib/visibility/adapters/openai-search";
+import {
+  OpenAiSearchAdapter,
+  openAiVisibilityTimeoutMs,
+} from "@/lib/visibility/adapters/openai-search";
 
 describe("OpenAI web-search visibility adapter", () => {
   const apiKey = process.env.OPENAI_API_KEY;
@@ -19,5 +22,12 @@ describe("OpenAI web-search visibility adapter", () => {
 
     process.env.OPENAI_VISIBILITY_MODEL = "gpt-test";
     expect(adapter.isConfigured()).toBe(true);
+  });
+
+  it("bounds provider latency below the worker duration", () => {
+    expect(openAiVisibilityTimeoutMs()).toBe(120_000);
+    expect(openAiVisibilityTimeoutMs("100")).toBe(10_000);
+    expect(openAiVisibilityTimeoutMs("900000")).toBe(240_000);
+    expect(openAiVisibilityTimeoutMs("not-a-number")).toBe(120_000);
   });
 });

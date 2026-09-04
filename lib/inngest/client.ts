@@ -4,6 +4,7 @@ import { Inngest } from "inngest";
 export const inngest = new Inngest({
   id: "answerlint",
   isDev: process.env.INNGEST_DEV === "1",
+  checkpointing: { maxRuntime: "240s", bufferedSteps: 1 },
 });
 
 export function canDispatchInngestEvents() {

@@ -72,6 +72,11 @@ export type VisibilityIntake = z.infer<typeof visibilityIntakeSchema>;
 export const visibilityApprovalSchema = z.object({
   brandCard: z.boolean().optional(),
   topicIds: z.array(z.string().uuid()).min(1).optional(),
+  prompts: z.array(z.object({
+    id: z.string().uuid(),
+    text: z.string().trim().min(10).max(1_000),
+    included: z.boolean(),
+  })).min(1).max(12).optional(),
 });
 
 export type VisibilityApprovalInput = z.infer<typeof visibilityApprovalSchema>;

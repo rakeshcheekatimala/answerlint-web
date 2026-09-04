@@ -155,7 +155,18 @@ export type PromptPlan = {
   importanceScore: number;
   competitorEntities: string[];
   plannedSamples: number;
+  included: boolean;
   status: "planned" | "queued" | "running" | "complete" | "failed";
+};
+
+export type VisibilityBenchmarkProgress = {
+  plannedRuns: number;
+  completedRuns: number;
+  failedRuns: number;
+  currentStage: "idle" | "queued" | "collecting" | "verifying" | "interpreting" | "complete" | "failed";
+  currentPromptId: string | null;
+  message: string;
+  updatedAt: string;
 };
 
 export type CitationEvidence = {
@@ -227,6 +238,7 @@ export type VisibilityProject = {
   topics: TopicMapItem[];
   prompts: PromptPlan[];
   actions: VisibilityAction[];
+  benchmarkProgress?: VisibilityBenchmarkProgress;
   createdAt: string;
   updatedAt: string;
   storageStatus: "stored" | "skipped" | "failed";

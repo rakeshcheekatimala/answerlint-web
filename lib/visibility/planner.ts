@@ -10,10 +10,25 @@ import type {
 import type { VisibilityIntake } from "@/lib/visibility/schema";
 export { applyProjectApprovals } from "@/lib/visibility/lifecycle";
 
-export function createVisibilityProjectDraft(input: VisibilityIntake): VisibilityProject {
+export function createVisibilityProjectDraft(
+  input: VisibilityIntake,
+): VisibilityProject {
   const now = new Date().toISOString();
   const brandCard = createBrandIntelligenceCard(input);
   const topics = createTopicMap(input);
+  const prompts = createPromptPlans(input, topics);
+  const promptsPerTopic = new Map<string, number>();
+  for (const prompt of prompts) {
+    promptsPerTopic.set(
+      prompt.topicId,
+      (promptsPerTopic.get(prompt.topicId) ?? 0) +
+        prompt.surfaces.length * prompt.plannedSamples,
+    );
+  }
+  const topicsWithCounts = topics.map((topic) => ({
+    ...topic,
+    promptCount: promptsPerTopic.get(topic.id) ?? 0,
+  }));
 
   return {
     id: crypto.randomUUID(),
@@ -21,8 +36,8 @@ export function createVisibilityProjectDraft(input: VisibilityIntake): Visibilit
     state: "awaiting_brand_approval",
     intake: input,
     brandCard,
-    topics,
-    prompts: createPromptPlans(input, topics),
+    topics: topicsWithCounts,
+    prompts,
     actions: [],
     createdAt: now,
     updatedAt: now,
@@ -34,8 +49,11 @@ export function createBrandIntelligenceCard(
   input: VisibilityIntake,
 ): BrandIntelligenceCard {
   const canonicalUrl = new URL(input.brandUrl);
-  const description = input.description || `${input.brandName} helps ${input.targetCustomers}.`;
-  const competitorNames = input.competitors.map((competitor) => competitor.name);
+  const description =
+    input.description || `${input.brandName} helps ${input.targetCustomers}.`;
+  const competitorNames = input.competitors.map(
+    (competitor) => competitor.name,
+  );
 
   return {
     canonicalName: input.brandName,
@@ -45,17 +63,22 @@ export function createBrandIntelligenceCard(
     products: [input.primaryCategory],
     locations: input.markets,
     people: [],
-    claims: [],
+    // This is user-supplied positioning, not a discovered fact. Approval turns
+    // it into the exact baseline claim used by citation verification.
+    claims: [description],
     pricingSignals: [],
     existingNarrative: `${input.brandName} is positioned around ${input.primaryCategory} for ${input.targetCustomers}.`,
     ambiguityRisks:
       competitorNames.length > 0
-        ? [`Confirm how ${input.brandName} differs from ${competitorNames.join(", ")}.`]
+        ? [
+            `Confirm how ${input.brandName} differs from ${competitorNames.join(", ")}.`,
+          ]
         : ["Add confirmed competitors before decision-mode benchmarking."],
     initialOwnedAssets: [
       {
         url: canonicalUrl.toString(),
-        reason: "Submitted brand URL; verification is pending the evidence crawl.",
+        reason:
+          "Submitted brand URL; verification is pending the evidence crawl.",
         verificationStatus: "pending",
       },
     ],
@@ -74,7 +97,9 @@ export function createBrandIntelligenceCard(
 export function createTopicMap(input: VisibilityIntake): TopicMapItem[] {
   const [market] = input.markets;
   const [language] = input.languages;
-  const competitorNames = input.competitors.map((competitor) => competitor.name);
+  const competitorNames = input.competitors.map(
+    (competitor) => competitor.name,
+  );
   const primaryUseCase = input.keyUseCases[0];
   const secondaryUseCase = input.keyUseCases[1] ?? primaryUseCase;
 
@@ -84,27 +109,30 @@ export function createTopicMap(input: VisibilityIntake): TopicMapItem[] {
       buyerIntent: "discover",
       funnelStage: "awareness",
       commercialValue: "medium",
-      evidenceGap: "Establish clear category relevance and a trustworthy owned source.",
+      evidenceGap:
+        "Establish clear category relevance and a trustworthy owned source.",
     }),
     createTopic({
       statement: `Trust and risk checks for ${input.primaryCategory}`,
       buyerIntent: "evaluate",
       funnelStage: "decision",
       commercialValue: "high",
-      evidenceGap: "Establish the proof, implementation, and risk details a buyer needs before acting.",
+      evidenceGap:
+        "Establish the proof, implementation, and risk details a buyer needs before acting.",
     }),
     createTopic({
-      statement: `${input.primaryCategory} for ${primaryUseCase}`,
+      statement: `Buyer job · ${formatBuyerJob(primaryUseCase)}`,
       buyerIntent: "evaluate",
       funnelStage: "consideration",
       commercialValue: "high",
-      evidenceGap: "Strengthen use-case proof, citations, and comparison evidence.",
+      evidenceGap:
+        "Strengthen use-case proof, citations, and comparison evidence.",
     }),
     createTopic({
       statement:
         competitorNames.length > 0
-          ? `${input.brandName} alternatives and comparison for ${secondaryUseCase}`
-          : `${input.brandName} proof and trust for ${secondaryUseCase}`,
+          ? `${input.brandName} alternatives · ${formatBuyerJob(secondaryUseCase)}`
+          : `${input.brandName} evidence · ${formatBuyerJob(secondaryUseCase)}`,
       buyerIntent: competitorNames.length > 0 ? "compare" : "evaluate",
       funnelStage: "decision",
       commercialValue: "high",
@@ -145,94 +173,115 @@ export function createPromptPlans(
   input: VisibilityIntake,
   topics: TopicMapItem[],
 ): PromptPlan[] {
-  return topics.flatMap((topic, index) =>
-    promptTemplates(input, topic, index).map((template) => ({
-      id: crypto.randomUUID(),
-      topicId: topic.id,
-      text: template.text,
-      kind: template.kind,
-      buyerRealism: template.buyerRealism,
-      market: topic.market,
-      language: topic.language,
-      surfaces: topic.surfaces,
-      whySelected: template.whySelected,
-      importanceScore: topic.commercialValue === "high" ? 90 : 65,
-      competitorEntities: topic.competitorNames,
-      plannedSamples: input.runtimePolicy.repeatRuns,
-      status: "planned",
-    })),
-  );
-}
-
-function promptTemplates(
-  input: VisibilityIntake,
-  topic: TopicMapItem,
-  index: number,
-): Array<Pick<PromptPlan, "text" | "kind" | "buyerRealism" | "whySelected">> {
-  if (index === 0) {
-    return [
-      {
-        text: `What are the best ${input.primaryCategory} options for ${input.targetCustomers}?`,
-        kind: "category_discovery",
-        buyerRealism: "buyer_realistic",
-        whySelected: "A category-discovery prompt for the selected market and buyer profile.",
-      },
-      {
-        text: `Which ${input.primaryCategory} providers should ${input.targetCustomers} evaluate first?`,
-        kind: "category_discovery",
-        buyerRealism: "buyer_realistic",
-        whySelected: "A second discovery wording keeps the baseline from depending on one prompt form.",
-      },
-    ];
-  }
-
-  if (topic.buyerIntent === "compare") {
-    const competitor = input.competitors[0]?.name ?? "leading alternatives";
-    return [
-      {
-        text: `How does ${input.brandName} compare with ${competitor} for ${input.keyUseCases[1] ?? input.keyUseCases[0]}?`,
-        kind: "comparison",
-        buyerRealism: "buyer_realistic",
-        whySelected: "A decision-stage head-to-head prompt limited to confirmed competitor entities.",
-      },
-      {
-        text: `What are the trade-offs between ${input.brandName} and ${competitor} for ${input.keyUseCases[1] ?? input.keyUseCases[0]}?`,
-        kind: "comparison",
-        buyerRealism: "buyer_realistic",
-        whySelected: "A comparison prompt that asks for constraints rather than a synthetic rank.",
-      },
-    ];
-  }
-
-  if (index === 1) {
-    return [
-      {
-        text: `What should ${input.targetCustomers} use for ${input.keyUseCases[0]}?`,
-        kind: "use_case_evaluation",
-        buyerRealism: "buyer_realistic",
-        whySelected: "A high-intent use-case prompt tied to the stated commercial goal.",
-      },
-      {
-        text: `How should ${input.targetCustomers} evaluate ${input.primaryCategory} for ${input.keyUseCases[0]}?`,
-        kind: "use_case_evaluation",
-        buyerRealism: "buyer_realistic",
-        whySelected: "An evaluation prompt that reveals the proof buyers look for before choosing a provider.",
-      },
-    ];
-  }
-
-  return [
+  const [discoveryTopic, trustTopic, useCaseTopic, narrativeTopic] = topics;
+  const competitor = input.competitors[0]?.name;
+  const candidates: Array<{
+    topic: TopicMapItem;
+    text: string;
+    kind: PromptPlan["kind"];
+    buyerRealism: PromptPlan["buyerRealism"];
+    whySelected: string;
+  }> = [
     {
-      text: `What proof should ${input.targetCustomers} require before adopting ${input.primaryCategory}?`,
-      kind: "proof_and_trust",
+      topic: discoveryTopic,
+      text: `What are the best ${input.primaryCategory} options for ${input.targetCustomers}?`,
+      kind: "category_discovery",
       buyerRealism: "buyer_realistic",
-      whySelected: "A trust/risk prompt tests whether the evidence a buyer needs is available in the answer.",
+      whySelected:
+        "Tests whether the brand enters an unaided category shortlist.",
     },
+    ...input.keyUseCases.map((useCase) => ({
+      topic: useCaseTopic,
+      text: `How should ${input.targetCustomers} ${normalizeBuyerJob(useCase)}?`,
+      kind: "use_case_evaluation" as const,
+      buyerRealism: "buyer_realistic" as const,
+      whySelected: `Preserves the submitted buyer job “${useCase}” as an independently discardable prompt.`,
+    })),
     {
-      text: `What implementation or risk questions matter when choosing ${input.primaryCategory} for ${input.keyUseCases[0]}?`,
-      kind: "proof_and_trust",
-      buyerRealism: "buyer_realistic",
-      whySelected: "A second trust/risk prompt covers practical constraints without inferring sentiment.",
+      topic: narrativeTopic,
+      text: `What is ${input.brandName} best known for, and what sources support that description?`,
+      kind: "brand_narrative",
+      buyerRealism: "brand_controlled",
+      whySelected:
+        "Checks whether the observed brand narrative is accurate and source-backed.",
     },
   ];
+
+  const optional = [
+    {
+      topic: trustTopic,
+      text: `What proof should ${input.targetCustomers} require before choosing ${input.primaryCategory}?`,
+      kind: "proof_and_trust" as const,
+      buyerRealism: "buyer_realistic" as const,
+      whySelected:
+        "Reveals which claims and sources establish trust for a high-stakes decision.",
+    },
+    ...(competitor
+      ? [
+          {
+            topic: narrativeTopic,
+            text: `How does ${input.brandName} compare with ${competitor} for ${input.keyUseCases[0]}?`,
+            kind: "comparison" as const,
+            buyerRealism: "buyer_realistic" as const,
+            whySelected:
+              "Tests a confirmed alternative without inventing a synthetic rank.",
+          },
+        ]
+      : []),
+    {
+      topic: discoveryTopic,
+      text: `Which ${input.primaryCategory} providers should ${input.targetCustomers} evaluate first?`,
+      kind: "category_discovery" as const,
+      buyerRealism: "buyer_realistic" as const,
+      whySelected: "Reduces dependence on a single category-discovery wording.",
+    },
+    {
+      topic: useCaseTopic,
+      text: `What evidence should ${input.targetCustomers} use to ${normalizeBuyerJob(input.keyUseCases[0])}?`,
+      kind: "use_case_evaluation" as const,
+      buyerRealism: "buyer_realistic" as const,
+      whySelected:
+        "Surfaces the decision criteria and proof expected for the highest-priority buyer job.",
+    },
+    {
+      topic: trustTopic,
+      text: `When might ${input.primaryCategory} be a poor fit for ${input.targetCustomers}?`,
+      kind: "negative_risk" as const,
+      buyerRealism: "diagnostic" as const,
+      whySelected:
+        "Checks whether limitations and fit are represented accurately, not just positive claims.",
+    },
+  ];
+
+  // At three repeats, eight prompts remain under the 28-call safety budget.
+  // Every submitted buyer job is retained before optional variants are added.
+  const templates = [...candidates, ...optional].slice(0, 8);
+  return templates.map(({ topic, ...template }) => ({
+    id: crypto.randomUUID(),
+    topicId: topic.id,
+    text: template.text,
+    kind: template.kind,
+    buyerRealism: template.buyerRealism,
+    market: topic.market,
+    language: topic.language,
+    surfaces: topic.surfaces,
+    whySelected: template.whySelected,
+    importanceScore: topic.commercialValue === "high" ? 90 : 65,
+    competitorEntities: topic.competitorNames,
+    plannedSamples: input.runtimePolicy.repeatRuns,
+    included: true,
+    status: "planned",
+  }));
+}
+
+function normalizeBuyerJob(useCase: string) {
+  const job = useCase.trim().replace(/[?.!]+$/, "");
+  if (!job) return "evaluate the available options";
+
+  return `${job.charAt(0).toLowerCase()}${job.slice(1)}`;
+}
+
+function formatBuyerJob(useCase: string) {
+  const job = normalizeBuyerJob(useCase);
+  return `${job.charAt(0).toUpperCase()}${job.slice(1)}`;
 }

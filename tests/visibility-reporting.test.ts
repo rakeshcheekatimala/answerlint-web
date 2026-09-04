@@ -212,4 +212,75 @@ describe("AI Visibility reporting", () => {
     expect(report.sourceRows[0]).toMatchObject({ domain: "example.com", citationCount: 1 });
     expect(report.metrics[0].value).toBeNull();
   });
+
+  it("adds only evidence-qualified CrewAI actions to the customer queue", () => {
+    const project = createVisibilityProjectDraft(intake);
+    const prompt = project.prompts[0];
+    const topic = project.topics[0];
+    const evidence = {
+      runs: [1, 2, 3].map((repetition) => ({
+        runId: `crew-run-${repetition}`,
+        promptId: prompt.id,
+        topicId: topic.id,
+        surface: "chatgpt_search" as const,
+        market: "US",
+        language: "en",
+        observation: {
+          runId: `crew-run-${repetition}`,
+          answerObserved: true,
+          brandMentioned: true,
+          competitorMentions: [],
+          recommendationStrength: "mentioned" as const,
+          rankedPosition: null,
+          citations: [],
+          confidence: "high" as const,
+          claimVerified: true,
+          signal: "Observed.",
+        },
+        citations: [],
+      })),
+    };
+    const report = buildVisibilityWorkspaceReport(project, evidence, {
+      analysisId: "analysis-123",
+      projectId: project.id,
+      status: "completed",
+      modelRuntime: "test/model",
+      promptVersion: "test/1",
+      executiveHeadline: "A supported decision",
+      executiveSummary: "Evidence supports one action and one unresolved signal.",
+      primaryRisk: null,
+      findings: [],
+      customerPainThemes: [],
+      brandVoice: [],
+      executiveDecisions: [],
+      actions: ["medium", "insufficient"].map((confidence) => ({
+        title: `${confidence} confidence action`,
+        whyNow: "The answer exposes a decision gap.",
+        owner: "content" as const,
+        effort: "medium" as const,
+        stakes: "high" as const,
+        businessOutcome: "conversion" as const,
+        decisionMakers: ["product" as const],
+        valueHypothesis: "Clear proof may reduce buyer uncertainty.",
+        costOfInaction: "The gap remains visible in buyer answers.",
+        impactHorizon: "this_quarter" as const,
+        evidenceThesis: "A direct proof block may improve retrieval of the approved claim.",
+        alternativesConsidered: ["The small cohort may explain the gap."],
+        doNotDo: ["Do not publish unsupported claims."],
+        falsificationRule: "Reject the thesis if the locked cohort does not change.",
+        linkedPageUrl: "https://example.com/",
+        acceptanceCriteria: ["Add reviewed proof"],
+        retestRule: "Repeat the locked cohort.",
+        affectedPromptIds: [prompt.id],
+        evidenceRunIds: ["crew-run-1"],
+        sourceUrls: [],
+        confidence: confidence as "medium" | "insufficient",
+      })),
+      limitations: [],
+    });
+
+    expect(report.crewAnalysis?.executiveHeadline).toBe("A supported decision");
+    expect(report.actions.some((action) => action.action === "medium confidence action")).toBe(true);
+    expect(report.actions.some((action) => action.action === "insufficient confidence action")).toBe(false);
+  });
 });

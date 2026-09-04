@@ -56,8 +56,8 @@ export async function PATCH(
   try {
     const { projectId } = await params;
     const parsed = visibilityApprovalSchema.safeParse(await request.json());
-    if (!parsed.success || (!parsed.data.brandCard && !parsed.data.topicIds)) {
-      return NextResponse.json({ error: "Submit a brand-card or Topic Map approval." }, { status: 400 });
+    if (!parsed.success || (!parsed.data.brandCard && !parsed.data.topicIds && !parsed.data.prompts)) {
+      return NextResponse.json({ error: "Submit a brand-card or benchmark-cohort update." }, { status: 400 });
     }
     const token = request.headers.get(VISIBILITY_PROJECT_TOKEN_HEADER) ?? undefined;
     const existing = await getVisibilityProject(projectId, token);
@@ -70,6 +70,27 @@ export async function PATCH(
         { error: "Topic approval can only include this project's generated topics." },
         { status: 400 },
       );
+    }
+    if (parsed.data.prompts) {
+      if (!["awaiting_brand_approval", "awaiting_topic_approval"].includes(existing.state)) {
+        return NextResponse.json(
+          { error: "The prompt cohort is locked once it is approved." },
+          { status: 409 },
+        );
+      }
+      const existingPromptIds = new Set(existing.prompts.map((prompt) => prompt.id));
+      if (parsed.data.prompts.some((prompt) => !existingPromptIds.has(prompt.id))) {
+        return NextResponse.json(
+          { error: "Prompt updates can only reference this project's generated prompts." },
+          { status: 400 },
+        );
+      }
+      if (!parsed.data.prompts.some((prompt) => prompt.included)) {
+        return NextResponse.json(
+          { error: "Keep at least one clear prompt in the benchmark cohort." },
+          { status: 400 },
+        );
+      }
     }
     const project = await updateVisibilityProjectApprovals(
       applyProjectApprovals(existing, parsed.data),
