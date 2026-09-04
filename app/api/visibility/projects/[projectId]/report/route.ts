@@ -7,6 +7,7 @@ import { isVisibilityEnabled } from "@/lib/visibility/feature-flag";
 import { VISIBILITY_PROJECT_TOKEN_HEADER } from "@/lib/visibility/constants";
 import {
   getVisibilityEvidence,
+  getLatestVisibilityCrewAnalysis,
   getVisibilityProject,
   VisibilityProjectAccessError,
   VisibilityStorageSetupError,
@@ -33,11 +34,14 @@ export async function GET(
       projectId,
       request.headers.get(VISIBILITY_PROJECT_TOKEN_HEADER) ?? undefined,
     );
-    const evidence = await getVisibilityEvidence(
-      project.id,
-      new Map(project.prompts.map((prompt) => [prompt.id, prompt.topicId])),
-    );
-    return NextResponse.json({ report: buildVisibilityWorkspaceReport(project, evidence) });
+    const [evidence, crewAnalysis] = await Promise.all([
+      getVisibilityEvidence(
+        project.id,
+        new Map(project.prompts.map((prompt) => [prompt.id, prompt.topicId])),
+      ),
+      getLatestVisibilityCrewAnalysis(project.id).catch(() => null),
+    ]);
+    return NextResponse.json({ report: buildVisibilityWorkspaceReport(project, evidence, crewAnalysis) });
   } catch (error) {
     if (error instanceof VisibilityProjectAccessError) {
       return NextResponse.json({ error: error.message }, { status: 403 });

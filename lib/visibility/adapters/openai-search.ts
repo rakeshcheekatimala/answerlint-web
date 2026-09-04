@@ -5,6 +5,7 @@ import type {
 } from "@/lib/visibility/adapters/types";
 
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
+const DEFAULT_OPENAI_VISIBILITY_TIMEOUT_MS = 120_000;
 
 type OpenAiCitation = {
   type?: string;
@@ -81,6 +82,7 @@ export class OpenAiSearchAdapter implements VisibilitySurfaceAdapter {
           : {}),
         input: request.prompt,
       }),
+      signal: AbortSignal.timeout(openAiVisibilityTimeoutMs()),
       cache: "no-store",
     });
 
@@ -119,6 +121,15 @@ export class OpenAiSearchAdapter implements VisibilitySurfaceAdapter {
       sources: dedupeSources([...sources, ...citations]),
     };
   }
+}
+
+export function openAiVisibilityTimeoutMs(
+  value = process.env.OPENAI_VISIBILITY_TIMEOUT_MS,
+) {
+  const timeout = Number(value ?? DEFAULT_OPENAI_VISIBILITY_TIMEOUT_MS);
+  return Number.isFinite(timeout)
+    ? Math.min(240_000, Math.max(10_000, timeout))
+    : DEFAULT_OPENAI_VISIBILITY_TIMEOUT_MS;
 }
 
 function dedupeSources(sources: Array<{ url: string; title?: string }>) {

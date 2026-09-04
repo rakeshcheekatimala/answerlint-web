@@ -12,6 +12,7 @@ import {
 } from "@/lib/visibility/constants";
 import {
   getVisibilityProject,
+  updateVisibilityBenchmarkProgress,
   updateVisibilityProjectApprovals,
   VisibilityProjectAccessError,
   VisibilityStorageSetupError,
@@ -65,7 +66,7 @@ export async function POST(
       project.topics.filter((topic) => topic.included).map((topic) => topic.id),
     );
     const plannedRuns = project.prompts
-      .filter((prompt) => includedTopicIds.has(prompt.topicId))
+      .filter((prompt) => prompt.included && includedTopicIds.has(prompt.topicId))
       .reduce(
         (count, prompt) =>
           count +
@@ -73,6 +74,12 @@ export async function POST(
             prompt.plannedSamples,
         0,
       );
+    if (plannedRuns === 0) {
+      return NextResponse.json(
+        { error: "Keep at least one prompt with a configured surface in the benchmark cohort." },
+        { status: 409 },
+      );
+    }
     if (plannedRuns > MAX_VISIBILITY_RUNS_PER_BENCHMARK) {
       return NextResponse.json(
         {
@@ -89,9 +96,22 @@ export async function POST(
     }
 
     const queued = await updateVisibilityProjectApprovals(
-      { ...project, state: "benchmark_queued" },
+      {
+        ...project,
+        state: "benchmark_queued",
+        benchmarkProgress: {
+          plannedRuns,
+          completedRuns: 0,
+          failedRuns: 0,
+          currentStage: "queued",
+          currentPromptId: null,
+          message: "Benchmark accepted and waiting for the durable worker.",
+          updatedAt: new Date().toISOString(),
+        },
+      },
       token,
     );
+    await updateVisibilityBenchmarkProgress(project.id, queued.benchmarkProgress);
     await inngest.send(visibilityBenchmarkRequested.create({ projectId }));
 
     return NextResponse.json({ project: queued, queued: true });

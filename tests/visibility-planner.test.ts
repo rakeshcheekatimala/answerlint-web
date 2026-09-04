@@ -53,4 +53,34 @@ describe("AI Visibility planning", () => {
     expect(ready.topics.filter((topic) => topic.included)).toHaveLength(2);
     expect(ready.brandCard.approvalStatus).toBe("approved");
   });
+
+  it("preserves every submitted buyer job and supports prompt-level discard", () => {
+    const keyUseCases = [
+      "buy an eSIM",
+      "choose a travel SIM",
+      "find portable Wi-Fi",
+      "avoid roaming charges",
+      "activate before travel",
+      "compare regional coverage",
+    ];
+    const project = createVisibilityProjectDraft(intake({ keyUseCases }));
+
+    expect(project.prompts).toHaveLength(8);
+    for (const useCase of keyUseCases) {
+      expect(project.prompts.some((prompt) => prompt.text.includes(useCase))).toBe(true);
+    }
+
+    expect(project.prompts).not.toContainEqual(
+      expect.objectContaining({ text: expect.stringContaining("for choose") }),
+    );
+
+    const prompts = project.prompts.map((prompt, index) => ({
+      id: prompt.id,
+      text: index === 0 ? "Which travel connectivity options best fit frequent travellers?" : prompt.text,
+      included: index !== 1,
+    }));
+    const updated = applyProjectApprovals(project, { prompts });
+    expect(updated.prompts[0].text).toContain("frequent travellers");
+    expect(updated.prompts[1].included).toBe(false);
+  });
 });

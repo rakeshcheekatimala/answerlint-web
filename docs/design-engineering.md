@@ -48,6 +48,15 @@ The standard is inspired by Emil Kowalski's writing on purposeful animation, tas
 - Fixes should look executable. Style recommendations like issues, PR comments, or CI tasks rather than generic bullets.
 - CI/CD visuals should show flow and consequence: commit, action, audit, pass/block.
 
+### AI Visibility Workspace
+
+- Treat the workspace as an operating instrument, not a generated report. One dominant decision should lead each view.
+- Use progressive disclosure for provenance. Keep the decision, business outcome, owner, target page, and acceptance test visible; place the full evidence thesis and alternatives behind a deliberate reveal.
+- Prefer quiet rows and typographic hierarchy over a grid of equally weighted cards. Reserve filled surfaces and status color for state, risk, and the primary action.
+- Distinguish observed evidence from agent interpretation in both language and layout. Never style an inference as a measured fact.
+- Make prompt cost visible before approval. A discarded prompt must immediately reduce the planned run count.
+- Stress-test long prompts, missing sources, insufficient evidence, failed runs, mobile widths, and executive scanning before treating the workspace as finished.
+
 ## Animation Review Checklist
 
 Before shipping motion, answer:

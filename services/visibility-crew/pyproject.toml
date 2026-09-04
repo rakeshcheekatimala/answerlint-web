@@ -1,0 +1,39 @@
+[project]
+name = "answerlint-visibility-crew"
+version = "0.1.0"
+description = "Bounded CrewAI reasoning service for AnswerLint's evidence loop"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+  "crewai==1.15.18",
+  "fastapi>=0.116.1,<1",
+  "pydantic>=2.11.7,<3",
+  "pydantic-settings>=2.10.1,<3",
+  "pyyaml>=6.0.2,<7",
+  "uvicorn[standard]>=0.35.0,<1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "httpx>=0.28.1,<1",
+  "pytest>=8.4.1,<9",
+  "pytest-asyncio>=1.1.0,<2",
+]
+
+[project.scripts]
+answerlint-visibility-crew = "answerlint_visibility_crew.api:run"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/answerlint_visibility_crew"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

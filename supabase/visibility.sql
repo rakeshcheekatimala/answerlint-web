@@ -95,10 +95,14 @@ create table if not exists public.visibility_prompts (
   importance_score integer not null check (importance_score between 0 and 100),
   competitor_entities text[] not null default '{}'::text[],
   planned_samples integer not null check (planned_samples between 1 and 10),
+  included boolean not null default true,
   status text not null check (status in ('planned', 'queued', 'running', 'complete', 'failed')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.visibility_prompts add column if not exists included boolean not null default true;
+alter table public.visibility_projects add column if not exists benchmark_progress jsonb;
 
 create table if not exists public.visibility_runs (
   id uuid primary key default gen_random_uuid(),
@@ -189,6 +193,18 @@ create table if not exists public.visibility_actions (
   updated_at timestamptz not null default now()
 );
 
+-- Agent interpretation is stored separately from measured facts. This keeps
+-- the evidence ledger immutable and makes every generated conclusion auditable.
+create table if not exists public.visibility_crew_analyses (
+  analysis_id text primary key,
+  project_id uuid not null references public.visibility_projects(id) on delete cascade,
+  status text not null check (status in ('completed', 'insufficient_evidence')),
+  model_runtime text not null,
+  prompt_version text not null,
+  analysis jsonb not null,
+  created_at timestamptz not null default now()
+);
+
 -- Only use embeddings for prompt/theme deduplication. Scores are based on
 -- observed answers and verified sources, never semantic similarity.
 create table if not exists public.visibility_prompt_embeddings (
@@ -206,6 +222,7 @@ create index if not exists visibility_runs_prompt_id_idx on public.visibility_ru
 create index if not exists visibility_citations_run_id_idx on public.visibility_citations (run_id);
 create index if not exists visibility_citations_canonical_url_idx on public.visibility_citations (canonical_url);
 create index if not exists visibility_actions_project_id_idx on public.visibility_actions (project_id, status);
+create index if not exists visibility_crew_analyses_project_id_idx on public.visibility_crew_analyses (project_id, created_at desc);
 create index if not exists visibility_prompt_embeddings_embedding_idx on public.visibility_prompt_embeddings using ivfflat (embedding vector_cosine_ops) with (lists = 100);
 
 insert into storage.buckets (id, name, public)
@@ -222,10 +239,11 @@ alter table public.visibility_runs enable row level security;
 alter table public.visibility_citations enable row level security;
 alter table public.visibility_observations enable row level security;
 alter table public.visibility_actions enable row level security;
+alter table public.visibility_crew_analyses enable row level security;
 alter table public.visibility_prompt_embeddings enable row level security;
 
-revoke all on table public.visibility_projects, public.visibility_competitors, public.visibility_brand_cards, public.visibility_owned_assets, public.visibility_topics, public.visibility_prompts, public.visibility_runs, public.visibility_citations, public.visibility_observations, public.visibility_actions, public.visibility_prompt_embeddings from anon, authenticated;
+revoke all on table public.visibility_projects, public.visibility_competitors, public.visibility_brand_cards, public.visibility_owned_assets, public.visibility_topics, public.visibility_prompts, public.visibility_runs, public.visibility_citations, public.visibility_observations, public.visibility_actions, public.visibility_crew_analyses, public.visibility_prompt_embeddings from anon, authenticated;
 grant usage on schema public to service_role;
-grant all on table public.visibility_projects, public.visibility_competitors, public.visibility_brand_cards, public.visibility_owned_assets, public.visibility_topics, public.visibility_prompts, public.visibility_runs, public.visibility_citations, public.visibility_observations, public.visibility_actions, public.visibility_prompt_embeddings to service_role;
+grant all on table public.visibility_projects, public.visibility_competitors, public.visibility_brand_cards, public.visibility_owned_assets, public.visibility_topics, public.visibility_prompts, public.visibility_runs, public.visibility_citations, public.visibility_observations, public.visibility_actions, public.visibility_crew_analyses, public.visibility_prompt_embeddings to service_role;
 
 notify pgrst, 'reload schema';
