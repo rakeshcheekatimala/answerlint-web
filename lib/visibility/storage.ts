@@ -208,10 +208,10 @@ async function storeProjectRelations(
   supabase: ReturnType<typeof createSupabaseAdminClient>,
 ) {
   const projectId = project.id;
-  const operations: Array<PromiseLike<{ error: { message: string } | null }>> = [];
+  const independentOperations: Array<PromiseLike<{ error: { message: string } | null }>> = [];
 
   if (project.intake.competitors.length) {
-    operations.push(
+    independentOperations.push(
       supabase.from("visibility_competitors").insert(
         project.intake.competitors.map((competitor) => ({
           project_id: projectId,
@@ -222,7 +222,7 @@ async function storeProjectRelations(
     );
   }
 
-  operations.push(
+  independentOperations.push(
     supabase.from("visibility_brand_cards").insert({
       project_id: projectId,
       canonical_name: project.brandCard.canonicalName,
@@ -243,7 +243,7 @@ async function storeProjectRelations(
   );
 
   if (project.brandCard.initialOwnedAssets.length) {
-    operations.push(
+    independentOperations.push(
       supabase.from("visibility_owned_assets").insert(
         project.brandCard.initialOwnedAssets.map((asset) => ({
           project_id: projectId,
@@ -255,56 +255,60 @@ async function storeProjectRelations(
     );
   }
 
+  const independentResults = await Promise.all(independentOperations);
+  independentResults.forEach(ensureVisibilityStorageSuccess);
+
+  // Prompts reference topic IDs, so this insert must finish before the prompt
+  // insert begins. Sending both requests concurrently can intermittently trip
+  // `visibility_prompts_topic_id_fkey` in Postgres.
   if (project.topics.length) {
-    operations.push(
-      supabase.from("visibility_topics").insert(
-        project.topics.map((topic) => ({
-          id: topic.id,
-          project_id: projectId,
-          statement: topic.statement,
-          buyer_intent: topic.buyerIntent,
-          funnel_stage: topic.funnelStage,
-          commercial_value: topic.commercialValue,
-          market: topic.market,
-          language: topic.language,
-          narrative_relevance: topic.narrativeRelevance,
-          competitor_names: topic.competitorNames,
-          evidence_sufficiency: topic.evidenceSufficiency,
-          evidence_gap: topic.evidenceGap,
-          prompt_count: topic.promptCount,
-          surfaces: topic.surfaces,
-          included: topic.included,
-        })),
-      ),
+    const topicsResult = await supabase.from("visibility_topics").insert(
+      project.topics.map((topic) => ({
+        id: topic.id,
+        project_id: projectId,
+        statement: topic.statement,
+        buyer_intent: topic.buyerIntent,
+        funnel_stage: topic.funnelStage,
+        commercial_value: topic.commercialValue,
+        market: topic.market,
+        language: topic.language,
+        narrative_relevance: topic.narrativeRelevance,
+        competitor_names: topic.competitorNames,
+        evidence_sufficiency: topic.evidenceSufficiency,
+        evidence_gap: topic.evidenceGap,
+        prompt_count: topic.promptCount,
+        surfaces: topic.surfaces,
+        included: topic.included,
+      })),
     );
+    ensureVisibilityStorageSuccess(topicsResult);
   }
 
   if (project.prompts.length) {
-    operations.push(
-      supabase.from("visibility_prompts").insert(
-        project.prompts.map((prompt) => ({
-          id: prompt.id,
-          project_id: projectId,
-          topic_id: prompt.topicId,
-          prompt_text: prompt.text,
-          kind: prompt.kind,
-          buyer_realism: prompt.buyerRealism,
-          market: prompt.market,
-          language: prompt.language,
-          surfaces: prompt.surfaces,
-          why_selected: prompt.whySelected,
-          importance_score: prompt.importanceScore,
-          competitor_entities: prompt.competitorEntities,
-          planned_samples: prompt.plannedSamples,
-          status: prompt.status,
-        })),
-      ),
+    const promptsResult = await supabase.from("visibility_prompts").insert(
+      project.prompts.map((prompt) => ({
+        id: prompt.id,
+        project_id: projectId,
+        topic_id: prompt.topicId,
+        prompt_text: prompt.text,
+        kind: prompt.kind,
+        buyer_realism: prompt.buyerRealism,
+        market: prompt.market,
+        language: prompt.language,
+        surfaces: prompt.surfaces,
+        why_selected: prompt.whySelected,
+        importance_score: prompt.importanceScore,
+        competitor_entities: prompt.competitorEntities,
+        planned_samples: prompt.plannedSamples,
+        status: prompt.status,
+      })),
     );
+    ensureVisibilityStorageSuccess(promptsResult);
   }
+}
 
-  const results = await Promise.all(operations);
-  const failed = results.find((result) => result.error);
-  if (failed?.error) throw new Error(failed.error.message);
+function ensureVisibilityStorageSuccess(result: { error: { message: string } | null }) {
+  if (result.error) throw new Error(result.error.message);
 }
 
 export async function getVisibilityProject(
