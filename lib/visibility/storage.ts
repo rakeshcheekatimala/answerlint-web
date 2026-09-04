@@ -473,6 +473,10 @@ export async function updateVisibilityProjectApprovals(
   }
 
   const now = new Date().toISOString();
+  // Resetting every topic and re-enabling the approved subset cannot be done
+  // concurrently: either statement may finish last in Postgres, leaving the
+  // entire cohort excluded even though the API returns ready_to_benchmark.
+  // Finish the reset first, then apply the selected IDs deterministically.
   const updates = await Promise.all([
     supabase
       .from("visibility_projects")
@@ -489,16 +493,6 @@ export async function updateVisibilityProjectApprovals(
       .from("visibility_topics")
       .update({ included: false })
       .eq("project_id", project.id),
-    supabase
-      .from("visibility_topics")
-      .update({ included: true })
-      .eq("project_id", project.id)
-      .in(
-        "id",
-        project.topics
-          .filter((topic) => topic.included)
-          .map((topic) => topic.id),
-      ),
     supabase.from("visibility_prompts").upsert(
       project.prompts.map((prompt) => ({
         id: prompt.id,
@@ -523,6 +517,18 @@ export async function updateVisibilityProjectApprovals(
   ]);
   const failed = updates.find((result) => result.error);
   if (failed?.error) throw new Error(failed.error.message);
+
+  const includedTopicIds = project.topics
+    .filter((topic) => topic.included)
+    .map((topic) => topic.id);
+  if (includedTopicIds.length) {
+    const selectedTopics = await supabase
+      .from("visibility_topics")
+      .update({ included: true })
+      .eq("project_id", project.id)
+      .in("id", includedTopicIds);
+    if (selectedTopics.error) throw new Error(selectedTopics.error.message);
+  }
 
   return { ...project, updatedAt: now, storageStatus: "stored" };
 }
