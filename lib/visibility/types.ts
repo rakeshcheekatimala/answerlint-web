@@ -160,6 +160,8 @@ export type PromptPlan = {
 };
 
 export type VisibilityBenchmarkProgress = {
+  /** Immutable cohort identifier used for dispatch and worker idempotency. */
+  benchmarkId: string;
   plannedRuns: number;
   completedRuns: number;
   failedRuns: number;

@@ -4,12 +4,16 @@ import { checkGlobalRateLimit } from "@/lib/net/global-rate-limit";
 import { getClientKey } from "@/lib/net/rate-limit";
 import { buildVisibilityWorkspaceReport } from "@/lib/visibility/reporting";
 import { isVisibilityEnabled } from "@/lib/visibility/feature-flag";
-import { VISIBILITY_PROJECT_TOKEN_HEADER } from "@/lib/visibility/constants";
+import {
+  getVisibilityProjectToken,
+  setVisibilityProjectCookie,
+} from "@/lib/visibility/capability";
 import {
   getVisibilityEvidence,
   getLatestVisibilityCrewAnalysis,
   getVisibilityProject,
   VisibilityProjectAccessError,
+  VisibilityProjectNotFoundError,
   VisibilityStorageSetupError,
 } from "@/lib/visibility/storage";
 
@@ -32,7 +36,7 @@ export async function GET(
     const { projectId } = await params;
     const project = await getVisibilityProject(
       projectId,
-      request.headers.get(VISIBILITY_PROJECT_TOKEN_HEADER) ?? undefined,
+      getVisibilityProjectToken(request, projectId),
     );
     const [evidence, crewAnalysis] = await Promise.all([
       getVisibilityEvidence(
@@ -41,7 +45,11 @@ export async function GET(
       ),
       getLatestVisibilityCrewAnalysis(project.id).catch(() => null),
     ]);
-    return NextResponse.json({ report: buildVisibilityWorkspaceReport(project, evidence, crewAnalysis) });
+    const response = NextResponse.json({
+      report: buildVisibilityWorkspaceReport(project, evidence, crewAnalysis),
+    });
+    const token = getVisibilityProjectToken(request, projectId);
+    return token ? setVisibilityProjectCookie(response, projectId, token) : response;
   } catch (error) {
     if (error instanceof VisibilityProjectAccessError) {
       return NextResponse.json({ error: error.message }, { status: 403 });
@@ -52,8 +60,14 @@ export async function GET(
         { status: 503 },
       );
     }
+    if (error instanceof VisibilityProjectNotFoundError) {
+      return NextResponse.json(
+        { error: "AI Visibility project not found." },
+        { status: 404 },
+      );
+    }
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unable to load visibility report." },
+      { error: "Unable to load visibility report." },
       { status: 500 },
     );
   }

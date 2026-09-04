@@ -4,11 +4,16 @@ import { checkGlobalRateLimit } from "@/lib/net/global-rate-limit";
 import { getClientKey } from "@/lib/net/rate-limit";
 import { applyProjectApprovals } from "@/lib/visibility/lifecycle";
 import { isVisibilityEnabled } from "@/lib/visibility/feature-flag";
-import { VISIBILITY_PROJECT_TOKEN_HEADER } from "@/lib/visibility/constants";
+import {
+  getVisibilityProjectToken,
+  publicVisibilityProject,
+  setVisibilityProjectCookie,
+} from "@/lib/visibility/capability";
 import {
   getVisibilityProject,
   updateVisibilityProjectApprovals,
   VisibilityProjectAccessError,
+  VisibilityProjectNotFoundError,
   VisibilityStorageSetupError,
 } from "@/lib/visibility/storage";
 import { visibilityApprovalSchema } from "@/lib/visibility/schema";
@@ -32,9 +37,11 @@ export async function GET(
     const { projectId } = await params;
     const project = await getVisibilityProject(
       projectId,
-      request.headers.get(VISIBILITY_PROJECT_TOKEN_HEADER) ?? undefined,
+      getVisibilityProjectToken(request, projectId),
     );
-    return NextResponse.json({ project });
+    const response = NextResponse.json({ project: publicVisibilityProject(project) });
+    const token = getVisibilityProjectToken(request, projectId);
+    return token ? setVisibilityProjectCookie(response, projectId, token) : response;
   } catch (error) {
     return projectErrorResponse(error);
   }
@@ -59,7 +66,7 @@ export async function PATCH(
     if (!parsed.success || (!parsed.data.brandCard && !parsed.data.topicIds && !parsed.data.prompts)) {
       return NextResponse.json({ error: "Submit a brand-card or benchmark-cohort update." }, { status: 400 });
     }
-    const token = request.headers.get(VISIBILITY_PROJECT_TOKEN_HEADER) ?? undefined;
+    const token = getVisibilityProjectToken(request, projectId);
     const existing = await getVisibilityProject(projectId, token);
     if (
       parsed.data.topicIds?.some(
@@ -96,7 +103,8 @@ export async function PATCH(
       applyProjectApprovals(existing, parsed.data),
       token,
     );
-    return NextResponse.json({ project });
+    const response = NextResponse.json({ project: publicVisibilityProject(project) });
+    return token ? setVisibilityProjectCookie(response, projectId, token) : response;
   } catch (error) {
     return projectErrorResponse(error);
   }
@@ -112,8 +120,14 @@ function projectErrorResponse(error: unknown) {
       { status: 503 },
     );
   }
+  if (error instanceof VisibilityProjectNotFoundError) {
+    return NextResponse.json(
+      { error: "AI Visibility project not found." },
+      { status: 404 },
+    );
+  }
   return NextResponse.json(
-    { error: error instanceof Error ? error.message : "AI Visibility project not found." },
-    { status: 404 },
+    { error: "AI Visibility project could not be loaded." },
+    { status: 500 },
   );
 }

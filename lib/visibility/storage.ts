@@ -34,6 +34,20 @@ export class VisibilityStorageSetupError extends Error {
   }
 }
 
+export class VisibilityProjectNotFoundError extends Error {
+  constructor() {
+    super("AI Visibility project not found.");
+    this.name = "VisibilityProjectNotFoundError";
+  }
+}
+
+export class VisibilityBenchmarkConflictError extends Error {
+  constructor() {
+    super("This benchmark cohort has already been queued or is no longer ready.");
+    this.name = "VisibilityBenchmarkConflictError";
+  }
+}
+
 type ProjectRow = {
   id: string;
   brand_url: string;
@@ -352,7 +366,7 @@ export async function getVisibilityProject(
     .eq("id", projectId)
     .single<ProjectRow>();
 
-  if (error || !project) throw new Error("AI Visibility project not found.");
+  if (error || !project) throw new VisibilityProjectNotFoundError();
   if (!tokenMatchesHash(editToken, project.owner_token_hash)) {
     throw new VisibilityProjectAccessError(
       "You do not have permission to open this project.",
@@ -373,7 +387,7 @@ export async function getVisibilityProjectForExecution(
     .select(projectSelect)
     .eq("id", projectId)
     .single<ProjectRow>();
-  if (error || !project) throw new Error("AI Visibility project not found.");
+  if (error || !project) throw new VisibilityProjectNotFoundError();
   return loadVisibilityProjectRelations(project, supabase);
 }
 
@@ -538,6 +552,57 @@ export async function updateVisibilityBenchmarkProgress(
     .eq("id", projectId);
   if (error)
     throw new Error(`Unable to update benchmark progress: ${error.message}`);
+}
+
+/**
+ * Claims a ready cohort with a compare-and-set update. Exactly one concurrent
+ * caller can move a project from ready_to_benchmark to benchmark_queued.
+ */
+export async function queueVisibilityBenchmark(
+  project: VisibilityProject,
+  progress: NonNullable<VisibilityProject["benchmarkProgress"]>,
+  editToken?: string,
+): Promise<VisibilityProject> {
+  if (!isSupabaseAdminConfigured()) throw new VisibilityStorageSetupError();
+
+  const supabase = createSupabaseAdminClient();
+  const { data: ownership, error: ownershipError } = await supabase
+    .from("visibility_projects")
+    .select("owner_token_hash")
+    .eq("id", project.id)
+    .single<{ owner_token_hash: string | null }>();
+  if (
+    ownershipError ||
+    !ownership ||
+    !tokenMatchesHash(editToken, ownership.owner_token_hash)
+  ) {
+    throw new VisibilityProjectAccessError(
+      "You do not have permission to modify this project.",
+    );
+  }
+
+  const now = new Date().toISOString();
+  const { data, error } = await supabase
+    .from("visibility_projects")
+    .update({
+      state: "benchmark_queued",
+      benchmark_progress: progress,
+      updated_at: now,
+    })
+    .eq("id", project.id)
+    .eq("state", "ready_to_benchmark")
+    .select(projectSelect)
+    .maybeSingle<ProjectRow>();
+  if (error) throw new Error("Unable to reserve the benchmark cohort.");
+  if (!data) throw new VisibilityBenchmarkConflictError();
+
+  return {
+    ...project,
+    state: "benchmark_queued",
+    benchmarkProgress: progress,
+    updatedAt: now,
+    storageStatus: "stored",
+  };
 }
 
 export async function storeVisibilityRunEvidence(input: {
@@ -983,5 +1048,5 @@ export function formatVisibilityStorageError(error: unknown) {
   if (message.includes("visibility_") && message.includes("schema cache")) {
     return visibilityStorageSetupMessage;
   }
-  return message;
+  return "Durable storage could not save this workspace. Retry shortly or contact support.";
 }

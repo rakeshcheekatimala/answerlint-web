@@ -14,5 +14,6 @@ def test_crew_builds_bounded_roles_and_tasks(tmp_path) -> None:
     assert len(crew.agents) == 4
     assert len(crew.tasks) == 4
     assert all(agent.allow_delegation is False for agent in crew.agents)
+    assert crew.memory is False
     assert crew.tasks[-1].output_pydantic is not None
     assert crew.tasks[-1].guardrail is not None

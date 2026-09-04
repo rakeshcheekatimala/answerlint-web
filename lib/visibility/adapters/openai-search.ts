@@ -6,6 +6,7 @@ import type {
 
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 const DEFAULT_OPENAI_VISIBILITY_TIMEOUT_MS = 120_000;
+const DEFAULT_OPENAI_VISIBILITY_MAX_OUTPUT_TOKENS = 2_000;
 
 type OpenAiCitation = {
   type?: string;
@@ -62,6 +63,7 @@ export class OpenAiSearchAdapter implements VisibilitySurfaceAdapter {
       body: JSON.stringify({
         model,
         store: false,
+        max_output_tokens: openAiVisibilityMaxOutputTokens(),
         ...(request.manifest.searchMode === "search_enabled"
           ? {
               tools: [
@@ -130,6 +132,15 @@ export function openAiVisibilityTimeoutMs(
   return Number.isFinite(timeout)
     ? Math.min(240_000, Math.max(10_000, timeout))
     : DEFAULT_OPENAI_VISIBILITY_TIMEOUT_MS;
+}
+
+export function openAiVisibilityMaxOutputTokens(
+  value = process.env.OPENAI_VISIBILITY_MAX_OUTPUT_TOKENS,
+) {
+  const tokens = Number(value ?? DEFAULT_OPENAI_VISIBILITY_MAX_OUTPUT_TOKENS);
+  return Number.isFinite(tokens)
+    ? Math.min(8_000, Math.max(256, Math.trunc(tokens)))
+    : DEFAULT_OPENAI_VISIBILITY_MAX_OUTPUT_TOKENS;
 }
 
 function dedupeSources(sources: Array<{ url: string; title?: string }>) {

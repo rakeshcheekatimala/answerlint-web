@@ -28,6 +28,15 @@ capacity = asyncio.Semaphore(settings.max_concurrency)
 replay_guard = ReplayGuard()
 
 
+def release_capacity_when_finished(task: asyncio.Task[AnalysisResponse]) -> None:
+    """Consume background failures and release the slot only after work stops."""
+    try:
+        task.exception()
+    except (asyncio.CancelledError, Exception):
+        pass
+    capacity.release()
+
+
 async def read_bounded_body(request: Request, max_bytes: int) -> bytes:
     chunks: list[bytes] = []
     size = 0
@@ -86,26 +95,39 @@ async def analyze(
     except ValueError as error:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(error)) from error
 
-    async with capacity:
-        try:
-            return await asyncio.wait_for(
-                asyncio.to_thread(run_analysis, payload, settings),
-                timeout=settings.request_timeout_seconds,
-            )
-        except TimeoutError as error:
-            raise HTTPException(status_code=status.HTTP_504_GATEWAY_TIMEOUT) from error
-        except ValueError:
-            logger.warning("Crew analysis rejected for project %s", payload.project_id)
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="Crew output failed evidence validation",
-            ) from error
-        except Exception as error:
-            logger.exception("Crew analysis failed for project %s", payload.project_id)
-            raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail="Crew analysis failed",
-            ) from error
+    await capacity.acquire()
+    task = asyncio.create_task(asyncio.to_thread(run_analysis, payload, settings))
+    try:
+        return await asyncio.wait_for(
+            asyncio.shield(task),
+            timeout=settings.request_timeout_seconds,
+        )
+    except TimeoutError as error:
+        raise HTTPException(status_code=status.HTTP_504_GATEWAY_TIMEOUT) from error
+    except ValueError as error:
+        logger.warning("Crew analysis rejected for project %s", payload.project_id)
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Crew output failed evidence validation",
+        ) from error
+    except Exception as error:
+        logger.error(
+            "Crew analysis failed for project %s; error_type=%s",
+            payload.project_id,
+            type(error).__name__,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Crew analysis failed",
+        ) from error
+    finally:
+        if task.done():
+            capacity.release()
+        else:
+            # Python cannot kill a running worker thread. Keeping its semaphore
+            # slot prevents timed-out provider calls from accumulating without
+            # bound while the underlying SDK finishes.
+            task.add_done_callback(release_capacity_when_finished)
 
 
 def run() -> None:

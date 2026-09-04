@@ -9,7 +9,16 @@ import {
 type GlobalRateLimitOptions = {
   limit: number;
   windowMs: number;
+  requireShared?: boolean;
+  cost?: number;
 };
+
+export class GlobalRateLimitConfigurationError extends Error {
+  constructor() {
+    super("Shared rate limiting is required for this operation.");
+    this.name = "GlobalRateLimitConfigurationError";
+  }
+}
 
 const limiters = new Map<string, Ratelimit>();
 
@@ -45,9 +54,14 @@ export async function checkGlobalRateLimit(
   options: GlobalRateLimitOptions,
 ): Promise<RateLimitResult> {
   const limiter = getLimiter(options);
-  if (!limiter) return checkRateLimit(key, options);
+  if (!limiter) {
+    if (options.requireShared) throw new GlobalRateLimitConfigurationError();
+    return checkRateLimit(key, options);
+  }
 
-  const result = await limiter.limit(key);
+  const result = await limiter.limit(key, {
+    rate: Math.max(1, Math.trunc(options.cost ?? 1)),
+  });
   return {
     allowed: result.success,
     remaining: Math.max(0, result.remaining),

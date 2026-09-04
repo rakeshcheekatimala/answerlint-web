@@ -165,4 +165,34 @@ describe("safeFetch", () => {
       }),
     ).rejects.toBeInstanceOf(UnsafeUrlError);
   });
+
+  it("stops an oversized streamed body even without content-length", async () => {
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new Uint8Array(6));
+        controller.enqueue(new Uint8Array(6));
+        controller.close();
+      },
+    });
+    const fetchImpl = vi.fn(async () => new Response(stream, { status: 200 }));
+
+    await expect(
+      safeFetch("https://example.com", {
+        resolver: publicResolver,
+        fetchImpl: fetchImpl as unknown as typeof fetch,
+        maxBytes: 10,
+      }),
+    ).rejects.toBeInstanceOf(UnsafeUrlError);
+  });
+
+  it("returns a replayable response when a streamed body is within the cap", async () => {
+    const fetchImpl = vi.fn(async () => new Response("bounded response"));
+    const response = await safeFetch("https://example.com", {
+      resolver: publicResolver,
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      maxBytes: 32,
+    });
+
+    await expect(response.text()).resolves.toBe("bounded response");
+  });
 });

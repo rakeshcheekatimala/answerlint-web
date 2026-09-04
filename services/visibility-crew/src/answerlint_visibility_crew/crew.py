@@ -116,6 +116,7 @@ class AnswerEvidenceCrew:
             agents=self.agents,
             tasks=self.tasks,
             process=Process.sequential,
+            memory=False,
             cache=True,
             verbose=False,
             max_rpm=20,
