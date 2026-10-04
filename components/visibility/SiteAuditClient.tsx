@@ -56,7 +56,7 @@ export function SiteAuditClient() {
   const [extraName, setExtraName] = useState("");
   const [extraUrl, setExtraUrl] = useState("");
   const [report, setReport] = useState<LeadershipReport | null>(null);
-  const [progress, setProgress] = useState<string[]>([]);
+  const [step, setStep] = useState("");
   const [error, setError] = useState("");
   const [pending, setPending] = useState<"discover" | "report" | null>(null);
 
@@ -72,7 +72,7 @@ export function SiteAuditClient() {
     setError("");
     setReport(null);
     setDiscovery(null);
-    setProgress(["Reading the site."]);
+    setStep("Reading the site.");
     setPending("discover");
     try {
       await readStream(
@@ -82,7 +82,7 @@ export function SiteAuditClient() {
           body: JSON.stringify({ domain: nextDomain, phase: "discover" }),
         }),
         (auditEvent) => {
-          if (auditEvent.type === "status") setProgress((lines) => [...lines, auditEvent.message].slice(-8));
+          if (auditEvent.type === "status") setStep(auditEvent.message);
           if (auditEvent.type === "error") setError(auditEvent.message);
           if (auditEvent.type === "discovery") {
             setDiscovery(auditEvent.discovery);
@@ -129,11 +129,11 @@ export function SiteAuditClient() {
     setDraftQuestion("");
     setExtraName("");
     setExtraUrl("");
-    setProgress([
+    setStep(
       nextCompetitors.length
         ? `Using ${nextQuestions.length} buyer ${nextQuestions.length === 1 ? "question" : "questions"}. Competitors: ${nextCompetitors.map((item) => item.name).join(", ")}.`
         : `Using ${nextQuestions.length} buyer ${nextQuestions.length === 1 ? "question" : "questions"}. No competitor added.`,
-    ]);
+    );
     setPending("report");
     try {
       await readStream(
@@ -151,7 +151,7 @@ export function SiteAuditClient() {
           }),
         }),
         (auditEvent) => {
-          if (auditEvent.type === "status") setProgress((lines) => [...lines, auditEvent.message].slice(-8));
+          if (auditEvent.type === "status") setStep(auditEvent.message);
           if (auditEvent.type === "error") setError(auditEvent.message);
           if (auditEvent.type === "cell") storeCells([auditEvent.cell]);
           if (auditEvent.type === "report") {
@@ -174,7 +174,7 @@ export function SiteAuditClient() {
           report={report}
           onEdit={() => {
             setReport(null);
-            setProgress([]);
+            setStep("");
           }}
         />
       </main>
@@ -231,20 +231,19 @@ export function SiteAuditClient() {
           <button
             type="submit"
             disabled={pending !== null}
-            className="inline-flex shrink-0 items-center justify-center rounded-xl bg-ink px-5 py-3 text-sm font-semibold text-paper transition hover:bg-ink/90 disabled:cursor-wait disabled:opacity-70"
+            aria-busy={pending === "discover" ? true : undefined}
+            className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-ink px-5 py-3 text-sm font-semibold text-paper transition hover:bg-ink/90 disabled:opacity-70 ${
+              pending === "discover" ? "cursor-wait" : "disabled:cursor-not-allowed"
+            }`}
           >
+            {pending === "discover" ? <WorkingDot className="h-2 w-2" /> : null}
             {pending === "discover" ? "Reading the site" : "Read the site"}
           </button>
         </div>
       </form>
 
-      {error ? (
-        <p role="alert" className="mt-4 rounded-xl border border-border bg-paper px-4 py-3 text-sm text-ink">
-          {error}
-        </p>
-      ) : null}
-
-      {progress.length && pending ? <Progress lines={progress} /> : null}
+      {!discovery && error ? <AuditError message={error} /> : null}
+      {pending === "discover" && step ? <WorkStatus message={step} /> : null}
 
       {discovery ? (
         <section className={`${cardClass} mt-6 overflow-hidden`}>
@@ -383,11 +382,17 @@ export function SiteAuditClient() {
             <button
               type="button"
               disabled={pending !== null || !brandName.trim()}
+              aria-busy={pending === "report" ? true : undefined}
               onClick={() => void onBuild()}
-              className="mt-5 inline-flex items-center justify-center rounded-xl bg-ink px-5 py-3 text-sm font-semibold text-paper transition hover:bg-ink/90 disabled:cursor-wait disabled:opacity-70"
+              className={`mt-5 inline-flex items-center justify-center gap-2 rounded-xl bg-ink px-5 py-3 text-sm font-semibold text-paper transition hover:bg-ink/90 disabled:opacity-70 ${
+                pending === "report" ? "cursor-wait" : "disabled:cursor-not-allowed"
+              }`}
             >
+              {pending === "report" ? <WorkingDot className="h-2 w-2" /> : null}
               {pending === "report" ? "Building the report" : "Build the report"}
             </button>
+            {error ? <AuditError message={error} /> : null}
+            {pending === "report" && step ? <WorkStatus message={step} /> : null}
           </div>
         </section>
       ) : null}
@@ -612,15 +617,36 @@ function AnswerCell({ cell }: { cell: EngineCell | undefined }) {
   );
 }
 
-function Progress({ lines }: { lines: string[] }) {
+function WorkStatus({ message }: { message: string }) {
   return (
-    <ol aria-live="polite" className={`${cardClass} mt-4 space-y-1 px-5 py-4 sm:px-8`}>
-      {lines.map((line, index) => (
-        <li key={`${line}-${index}`} className={index === lines.length - 1 ? "text-sm text-ink" : "text-sm text-ink-muted"}>
-          {line}
-        </li>
-      ))}
-    </ol>
+    <div
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+      className="mt-4 flex items-start gap-3 rounded-xl border border-border bg-paper px-4 py-3"
+    >
+      <span aria-hidden="true" className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-ink">
+        <WorkingDot />
+      </span>
+      <p className="min-w-0 break-words text-sm font-medium leading-6 text-ink">{message}</p>
+    </div>
+  );
+}
+
+function WorkingDot({ className = "h-1.5 w-1.5" }: { className?: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`shrink-0 rounded-full bg-score-high motion-safe:animate-pulse ${className}`}
+    />
+  );
+}
+
+function AuditError({ message }: { message: string }) {
+  return (
+    <p role="alert" className="mt-4 rounded-xl border border-border bg-paper px-4 py-3 text-sm text-ink">
+      {message}
+    </p>
   );
 }
 
