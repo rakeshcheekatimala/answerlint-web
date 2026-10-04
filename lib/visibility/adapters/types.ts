@@ -4,6 +4,10 @@ export type SurfaceExecutionRequest = {
   projectId: string;
   manifest: RunManifest;
   prompt: string;
+  /** Page audits pass a short timeout so several prompts fit in one function. */
+  timeoutMs?: number;
+  /** Page audits can supply the model when the benchmark env var is unset. */
+  model?: string;
 };
 
 export type SurfaceExecutionResult = {

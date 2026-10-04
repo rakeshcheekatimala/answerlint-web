@@ -247,3 +247,17 @@ grant usage on schema public to service_role;
 grant all on table public.visibility_projects, public.visibility_competitors, public.visibility_brand_cards, public.visibility_owned_assets, public.visibility_topics, public.visibility_prompts, public.visibility_runs, public.visibility_citations, public.visibility_observations, public.visibility_actions, public.visibility_crew_analyses, public.visibility_prompt_embeddings to service_role;
 
 notify pgrst, 'reload schema';
+
+create table if not exists public.visibility_answer_cells (
+  cache_key text primary key,
+  domain text not null,
+  engine text not null,
+  model text not null,
+  prompt text not null,
+  payload jsonb not null,
+  saved_at timestamptz not null default now()
+);
+
+alter table public.visibility_answer_cells enable row level security;
+revoke all on table public.visibility_answer_cells from anon, authenticated;
+grant all on table public.visibility_answer_cells to service_role;

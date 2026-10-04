@@ -44,9 +44,53 @@ export type EvidenceGroup = {
   citations: CitationEvidence[];
 };
 
+export type LeadershipCitationRow = {
+  name: string;
+  role: "you" | "competitor" | "independent" | "other";
+  citations: number;
+  /** Null until at least one citation resolves. Zero and “not measured” stay distinct. */
+  share: number | null;
+};
+
+export type LeadershipMissingPrompt = {
+  promptId: string;
+  prompt: string;
+  citedInstead: string[];
+  runs: number;
+};
+
+export type LeadershipTechnicalCheck = {
+  id: string;
+  label: string;
+  status: "pass" | "needs_work" | "partial" | "waiting";
+  detail: string;
+};
+
+export type LeadershipFix = {
+  rank: number;
+  title: string;
+  why: string;
+  evidence: string;
+};
+
+export type LeadershipPage = {
+  status: "waiting" | "partial" | "ready";
+  headline: string;
+  method: string;
+  citationShare: LeadershipCitationRow[];
+  citationNote: string;
+  namedInPrompts: string;
+  missingPrompts: LeadershipMissingPrompt[];
+  missingNote: string;
+  technicalChecks: LeadershipTechnicalCheck[];
+  fixes: LeadershipFix[];
+  fixesNote: string;
+};
+
 export type VisibilityWorkspaceReport = {
   state: "planning" | "awaiting_evidence" | "measuring" | "completed";
   executiveBrief: string;
+  leadership: LeadershipPage;
   crewAnalysis: VisibilityCrewAnalysis | null;
   metrics: VisibilityMetric[];
   topicRows: Array<{
@@ -180,6 +224,8 @@ export function buildVisibilityWorkspaceReport(
     measuredEvidence.runs.flatMap((run) => run.citations),
   );
 
+  const leadership = buildLeadershipPage(project, measuredEvidence, groups, actions);
+
   return {
     state: project.state === "completed" ? "completed" : "measuring",
     executiveBrief:
@@ -245,6 +291,7 @@ export function buildVisibilityWorkspaceReport(
     },
     evidenceRows,
     sourceRows,
+    leadership,
   };
 }
 
@@ -321,6 +368,8 @@ function unmeasuredReport(
         : "planning";
   const evidenceReason =
     "Not measured yet — no verified answer runs are available.";
+  const leadership = buildLeadershipPage(project, { runs: [] }, [], []);
+
   return {
     state: measurementState,
     executiveBrief:
@@ -353,7 +402,508 @@ function unmeasuredReport(
     },
     evidenceRows: [],
     sourceRows: [],
+    leadership,
   };
+}
+
+const LEADERSHIP_METHOD =
+  "The same buyer questions are asked more than once. Citation share counts resolved sources. A prompt counts as missing only when you are absent every time.";
+
+/**
+ * The first page of a visibility workspace. It answers four leadership
+ * questions and withholds a fix until repeated runs support it.
+ */
+export function buildLeadershipPage(
+  project: VisibilityProject,
+  evidence: VisibilityEvidence,
+  groups: EvidenceGroup[],
+  actions: VisibilityAction[],
+): LeadershipPage {
+  const eligible = groups.filter((group) => group.confidence !== "insufficient");
+  const status: LeadershipPage["status"] =
+    evidence.runs.length === 0 ? "waiting" : eligible.length === 0 ? "partial" : "ready";
+  const allCitations = evidence.runs.flatMap((run) => run.citations);
+  const resolvedCitations = allCitations.filter((citation) => citation.resolved);
+  const citationShare =
+    status === "ready"
+      ? buildCitationShare(project, allCitations)
+      : blankCitationShare(project);
+  const missingPrompts = buildMissingPrompts(project, eligible);
+  const named = eligible.filter((group) => group.brandMentionRate > 0).length;
+  const you = citationShare.find((row) => row.role === "you");
+  const fixes = status === "ready" ? buildLeadershipFixes(project, eligible, actions) : [];
+
+  return {
+    status,
+    headline: leadershipHeadline(project, status, you?.share ?? null, named, eligible.length, missingPrompts.length),
+    method: LEADERSHIP_METHOD,
+    citationShare,
+    citationNote: citationNote(status, resolvedCitations.length),
+    namedInPrompts:
+      status === "ready"
+        ? `Named in ${named} of ${eligible.length} completed prompts. Being named and being the cited source are counted separately.`
+        : "Being named in an answer and being the cited source are counted separately. A mention without your URL does not raise citation share.",
+    missingPrompts,
+    missingNote: missingNote(status, missingPrompts.length),
+    technicalChecks: buildTechnicalChecks(project, evidence, groups, eligible),
+    fixes,
+    fixesNote: fixesNote(status, fixes.length),
+  };
+}
+
+function leadershipHeadline(
+  project: VisibilityProject,
+  status: LeadershipPage["status"],
+  yourShare: number | null,
+  named: number,
+  completedPrompts: number,
+  missing: number,
+) {
+  if (status === "waiting") {
+    return "Approve the questions. This page fills in from repeated runs.";
+  }
+  if (status === "partial") {
+    return "Repeats are still in progress. A prompt is not marked missing until every planned run finishes.";
+  }
+  const share =
+    yourShare === null
+      ? "Citation share is still blank."
+      : `${project.intake.brandName} has ${yourShare}% of resolved citations.`;
+  const presence =
+    missing === 0
+      ? `Named in ${named} of ${completedPrompts} completed prompts.`
+      : `Missing from ${missing} of ${completedPrompts} completed prompts.`;
+  return `${share} ${presence}`;
+}
+
+function citationNote(status: LeadershipPage["status"], resolved: number) {
+  if (status === "ready") {
+    return resolved > 0
+      ? `${resolved} resolved citation${resolved === 1 ? "" : "s"} are in the share. Unopened URLs are left out.`
+      : "The repeats finished, and no cited URL resolved, so the share stays blank.";
+  }
+  if (status === "partial" && resolved > 0) {
+    return `${resolved} citation${resolved === 1 ? "" : "s"} resolved so far. Share is published when the repeats finish.`;
+  }
+  return "Share stays blank until the repeats finish and a cited URL resolves. An unopened link is not treated as zero.";
+}
+
+function blankCitationShare(project: VisibilityProject): LeadershipCitationRow[] {
+  const competitors = project.intake.competitors.filter((competitor) => competitor.name.trim());
+  return [
+    { name: project.intake.brandName, role: "you", citations: 0, share: null },
+    ...competitors.map((competitor) => ({
+      name: competitor.name,
+      role: "competitor" as const,
+      citations: 0,
+      share: null,
+    })),
+  ];
+}
+
+function missingNote(status: LeadershipPage["status"], missing: number) {
+  if (status === "waiting") {
+    return "Questions where you are absent on every repeat will be listed here.";
+  }
+  if (status === "partial") {
+    return "Questions have been asked, but not enough times to decide that you are missing.";
+  }
+  return missing === 0
+    ? "You appeared at least once in every completed prompt."
+    : "You were absent on every repeat of these questions.";
+}
+
+function fixesNote(status: LeadershipPage["status"], count: number) {
+  if (status === "waiting") {
+    return "Five fixes are listed after the repeats agree. The first ones are prompts where a competitor is cited and you are not.";
+  }
+  if (status === "partial") {
+    return "Fixes stay blank until each question has finished its repeats.";
+  }
+  if (count === 0) {
+    return "No fix met the bar. One is added when a repeated run shows a competitor cited, your page missing, or a citation that does not hold up.";
+  }
+  if (count < 5) {
+    return `${count} of 5 fixes are supported by repeated runs. The rest stay blank.`;
+  }
+  return "Ordered by prompts where a competitor is cited and you are not, then by citation gaps.";
+}
+
+function buildCitationShare(
+  project: VisibilityProject,
+  citations: CitationEvidence[],
+): LeadershipCitationRow[] {
+  const resolved = citations.filter((citation) => citation.resolved);
+  const competitors = project.intake.competitors.filter((competitor) => competitor.name.trim());
+  if (!resolved.length) {
+    return [
+      { name: project.intake.brandName, role: "you", citations: 0, share: null },
+      ...competitors.map((competitor) => ({
+        name: competitor.name,
+        role: "competitor" as const,
+        citations: 0,
+        share: null,
+      })),
+    ];
+  }
+
+  const rows: LeadershipCitationRow[] = [
+    { name: project.intake.brandName, role: "you", citations: 0, share: null },
+    ...competitors.map((competitor) => ({
+      name: competitor.name,
+      role: "competitor" as const,
+      citations: 0,
+      share: null,
+    })),
+  ];
+  let otherCompetitors = 0;
+  let independent = 0;
+
+  for (const citation of resolved) {
+    if (citation.sourceType === "owned") {
+      rows[0].citations += 1;
+      continue;
+    }
+    const matched = competitorNameForCitation(citation, competitors);
+    const competitorRow = matched
+      ? rows.find((row) => row.role === "competitor" && row.name === matched)
+      : undefined;
+    if (competitorRow) {
+      competitorRow.citations += 1;
+      continue;
+    }
+    if (citation.sourceType === "competitor") otherCompetitors += 1;
+    else independent += 1;
+  }
+
+  if (otherCompetitors > 0) {
+    rows.push({
+      name: "Other competitor sources",
+      role: "other",
+      citations: otherCompetitors,
+      share: null,
+    });
+  }
+  if (independent > 0) {
+    rows.push({
+      name: "Other cited sources",
+      role: "independent",
+      citations: independent,
+      share: null,
+    });
+  }
+
+  const shares = allocateShares(rows.map((row) => row.citations));
+  return rows.map((row, index) => ({ ...row, share: shares[index] ?? 0 }));
+}
+
+function buildMissingPrompts(
+  project: VisibilityProject,
+  eligible: EvidenceGroup[],
+): LeadershipMissingPrompt[] {
+  return eligible
+    .filter((group) => group.brandMentionRate === 0)
+    .map((group) => ({
+      promptId: group.promptId,
+      prompt:
+        project.prompts.find((prompt) => prompt.id === group.promptId)?.text ??
+        "Unknown prompt",
+      citedInstead: citedInstead(project, group),
+      runs: group.runs.length,
+    }));
+}
+
+function buildTechnicalChecks(
+  project: VisibilityProject,
+  evidence: VisibilityEvidence,
+  groups: EvidenceGroup[],
+  eligible: EvidenceGroup[],
+): LeadershipTechnicalCheck[] {
+  const includedPrompts = project.prompts.filter((prompt) => prompt.included);
+  const citations = evidence.runs.flatMap((run) => run.citations);
+  const resolved = citations.filter((citation) => citation.resolved);
+  const supported = resolved.filter((citation) => citationSupportsClaim(citation));
+  const owned = resolved.filter((citation) => citation.sourceType === "owned");
+  const competitors = project.intake.competitors.filter((competitor) => competitor.name.trim());
+  const competitorsWithUrls = competitors.filter((competitor) => competitor.url.trim());
+  const promptGroups = new Set(groups.map((group) => group.promptId));
+  const finished = includedPrompts.filter((prompt) =>
+    eligible.some((group) => group.promptId === prompt.id),
+  ).length;
+
+  const repeats: LeadershipTechnicalCheck =
+    evidence.runs.length === 0
+      ? {
+          id: "repeats",
+          label: "Repeated questions",
+          status: "waiting",
+          detail: `${includedPrompts.length} questions are planned. Each one is asked ${project.intake.runtimePolicy.repeatRuns} time${project.intake.runtimePolicy.repeatRuns === 1 ? "" : "s"} before it counts.`,
+        }
+      : finished === includedPrompts.length && includedPrompts.length > 0
+        ? {
+            id: "repeats",
+            label: "Repeated questions",
+            status: "pass",
+            detail: `${finished} of ${includedPrompts.length} questions finished their repeats.`,
+          }
+        : {
+            id: "repeats",
+            label: "Repeated questions",
+            status: promptGroups.size > 0 ? "partial" : "waiting",
+            detail: `${finished} of ${includedPrompts.length} questions have finished their repeats. ${evidence.runs.length} runs are stored.`,
+          };
+
+  const opens: LeadershipTechnicalCheck =
+    citations.length === 0
+      ? {
+          id: "urls-open",
+          label: "Cited URLs open",
+          status: "waiting",
+          detail: "Checked after an answer cites a URL.",
+        }
+      : resolved.length === citations.length
+        ? {
+            id: "urls-open",
+            label: "Cited URLs open",
+            status: "pass",
+            detail: `${resolved.length} of ${citations.length} cited URLs resolved.`,
+          }
+        : {
+            id: "urls-open",
+            label: "Cited URLs open",
+            status: resolved.length === 0 ? "needs_work" : "partial",
+            detail: `${resolved.length} of ${citations.length} cited URLs resolved.`,
+          };
+
+  const ownedCheck: LeadershipTechnicalCheck =
+    resolved.length === 0
+      ? {
+          id: "owned-cited",
+          label: "Your pages are cited",
+          status: "waiting",
+          detail: "Counted when a resolved citation is on your domain.",
+        }
+      : owned.length > 0
+        ? {
+            id: "owned-cited",
+            label: "Your pages are cited",
+            status: "pass",
+            detail: `${owned.length} of ${resolved.length} resolved citations are on your site.`,
+          }
+        : {
+            id: "owned-cited",
+            label: "Your pages are cited",
+            status: "needs_work",
+            detail: `0 of ${resolved.length} resolved citations are on your site.`,
+          };
+
+  const support: LeadershipTechnicalCheck =
+    resolved.length === 0
+      ? {
+          id: "claim-support",
+          label: "Cited pages support the claim",
+          status: "waiting",
+          detail: "A URL can open without the page text supporting the claim.",
+        }
+      : supported.length === resolved.length
+        ? {
+            id: "claim-support",
+            label: "Cited pages support the claim",
+            status: "pass",
+            detail: `${supported.length} of ${resolved.length} resolved pages support the claim.`,
+          }
+        : {
+            id: "claim-support",
+            label: "Cited pages support the claim",
+            status: supported.length === 0 ? "needs_work" : "partial",
+            detail: `${supported.length} of ${resolved.length} resolved pages support the claim.`,
+          };
+
+  const comparison: LeadershipTechnicalCheck =
+    competitors.length === 0
+      ? {
+          id: "competitors",
+          label: "Competitors can be compared",
+          status: "needs_work",
+          detail: "Add the competitor names you want on the citation chart.",
+        }
+      : competitorsWithUrls.length === 0
+        ? {
+            id: "competitors",
+            label: "Competitors can be compared",
+            status: "partial",
+            detail: "Names are saved. Add their sites so a citation can be matched to a competitor.",
+          }
+        : {
+            id: "competitors",
+            label: "Competitors can be compared",
+            status: "pass",
+            detail: `Citations are matched to ${competitorsWithUrls.map((competitor) => competitor.name).join(", ")}.`,
+          };
+
+  return [repeats, opens, ownedCheck, support, comparison];
+}
+
+function buildLeadershipFixes(
+  project: VisibilityProject,
+  eligible: EvidenceGroup[],
+  actions: VisibilityAction[],
+): LeadershipFix[] {
+  const drafts: Array<{ priority: number; title: string; why: string; evidence: string }> = [];
+  const coveredPrompts = new Set<string>();
+
+  for (const action of actions) {
+    if (action.id.startsWith("crew-")) continue;
+    const promptId = action.affectedPromptIds[0];
+    const prompt = project.prompts.find((item) => item.id === promptId);
+    const topic = prompt
+      ? project.topics.find((item) => item.id === prompt.topicId)
+      : undefined;
+    if (action.id.startsWith("comparison-")) {
+      drafts.push({
+        priority: 1,
+        title: `Show up for “${clip(prompt?.text ?? topic?.statement ?? "this buyer question")}”`,
+        why: "You were absent on every repeated run, and a competitor source was cited.",
+        evidence: action.whyNow,
+      });
+    } else if (action.id.startsWith("owned-citation-")) {
+      drafts.push({
+        priority: 3,
+        title: `Get your own page cited for “${clip(topic?.statement ?? prompt?.text ?? "this topic")}”`,
+        why: "The answer names you, but none of the resolved citations are on your site.",
+        evidence: action.whyNow,
+      });
+    } else {
+      drafts.push({
+        priority: 3,
+        title: clip(action.action, 140),
+        why: action.whyNow,
+        evidence: action.verificationRule,
+      });
+    }
+    for (const id of action.affectedPromptIds) coveredPrompts.add(id);
+  }
+
+  for (const group of eligible) {
+    if (coveredPrompts.has(group.promptId) || group.brandMentionRate > 0) continue;
+    const prompt = project.prompts.find((item) => item.id === group.promptId);
+    const cited = citedInstead(project, group);
+    drafts.push({
+      priority: 2,
+      title: `Answer “${clip(prompt?.text ?? "this buyer question")}” on your site`,
+      why: cited.length
+        ? `You were absent on all ${group.runs.length} repeats. Cited instead: ${cited.join(", ")}.`
+        : `You were absent on all ${group.runs.length} repeats. No competitor citation was verified, so publish a direct answer before a comparison page.`,
+      evidence: prompt?.text ?? group.promptId,
+    });
+    coveredPrompts.add(group.promptId);
+  }
+
+  const eligibleCitations = eligible.flatMap((group) => group.citations);
+  const unresolved = eligibleCitations.filter((citation) => !citation.resolved).length;
+  if (unresolved > 0) {
+    drafts.push({
+      priority: 4,
+      title: "Drop citations that do not open",
+      why: `${unresolved} cited URL${unresolved === 1 ? "" : "s"} did not resolve, so ${unresolved === 1 ? "it is" : "they are"} excluded from citation share.`,
+      evidence: "Counted on prompts that finished their repeats.",
+    });
+  }
+  const unsupported = eligibleCitations.filter(
+    (citation) => citation.resolved && !citationSupportsClaim(citation),
+  ).length;
+  if (unsupported > 0) {
+    drafts.push({
+      priority: 5,
+      title: "Replace citations that do not support the claim",
+      why: `${unsupported} resolved page${unsupported === 1 ? "" : "s"} opened, but the page text did not support the claim being checked.`,
+      evidence: "Opening a URL and supporting the claim are separate checks.",
+    });
+  }
+
+  for (const action of actions) {
+    if (!action.id.startsWith("crew-")) continue;
+    if (action.affectedPromptIds.some((id) => coveredPrompts.has(id))) continue;
+    drafts.push({
+      priority: 6,
+      title: clip(action.action, 140),
+      why: action.whyNow,
+      evidence: action.verificationRule,
+    });
+  }
+
+  return drafts
+    .sort((left, right) => left.priority - right.priority)
+    .slice(0, 5)
+    .map((draft, index) => ({
+      rank: index + 1,
+      title: draft.title,
+      why: draft.why,
+      evidence: draft.evidence,
+    }));
+}
+
+function citedInstead(project: VisibilityProject, group: EvidenceGroup) {
+  const names = new Set<string>();
+  for (const run of group.runs) {
+    for (const name of run.observation.competitorMentions) {
+      if (name.trim()) names.add(name.trim());
+    }
+    for (const citation of run.citations) {
+      if (!citation.resolved) continue;
+      const matched = competitorNameForCitation(citation, project.intake.competitors);
+      if (matched) names.add(matched);
+      else if (citation.sourceType === "competitor") {
+        names.add(sourceDomain(citation.canonicalUrl ?? citation.url));
+      }
+    }
+  }
+  return [...names].slice(0, 4);
+}
+
+function competitorNameForCitation(
+  citation: CitationEvidence,
+  competitors: VisibilityProject["intake"]["competitors"],
+) {
+  const host = sourceDomain(citation.canonicalUrl ?? citation.url);
+  if (!host || host === "Unresolved URL") return null;
+  for (const competitor of competitors) {
+    if (!competitor.name.trim() || !competitor.url.trim()) continue;
+    const competitorHost = sourceDomain(competitor.url);
+    if (!competitorHost || competitorHost === "Unresolved URL") continue;
+    if (host === competitorHost || host.endsWith(`.${competitorHost}`)) {
+      return competitor.name;
+    }
+  }
+  return null;
+}
+
+function citationSupportsClaim(citation: CitationEvidence) {
+  if (citation.verificationStatus) return citation.verificationStatus === "claim_supported";
+  return citation.supportsClaim;
+}
+
+function allocateShares(counts: number[]) {
+  const total = counts.reduce((sum, count) => sum + count, 0);
+  if (!total) return counts.map(() => 0);
+  const exact = counts.map((count) => (count / total) * 100);
+  const floors = exact.map((value) => Math.floor(value));
+  let remainder = 100 - floors.reduce((sum, value) => sum + value, 0);
+  const order = exact
+    .map((value, index) => ({ index, fraction: value - floors[index] }))
+    .sort((left, right) => right.fraction - left.fraction || left.index - right.index);
+  for (const item of order) {
+    if (remainder <= 0) break;
+    floors[item.index] += 1;
+    remainder -= 1;
+  }
+  return floors;
+}
+
+function clip(value: string, max = 96) {
+  const trimmed = value.trim();
+  if (trimmed.length <= max) return trimmed;
+  return `${trimmed.slice(0, max - 1).trimEnd()}…`;
 }
 
 export function mergeVisibilityActions(

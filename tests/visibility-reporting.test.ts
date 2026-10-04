@@ -283,4 +283,154 @@ describe("AI Visibility reporting", () => {
     expect(report.actions.some((action) => action.action === "medium confidence action")).toBe(true);
     expect(report.actions.some((action) => action.action === "insufficient confidence action")).toBe(false);
   });
+
+  it("keeps the one-page report blank until repeats finish", () => {
+    const project = createVisibilityProjectDraft(intake);
+    const waiting = buildVisibilityWorkspaceReport(project);
+    expect(waiting.leadership.status).toBe("waiting");
+    expect(waiting.leadership.citationShare.every((row) => row.share === null)).toBe(true);
+    expect(waiting.leadership.citationShare.map((row) => row.name)).toEqual(["Example", "Rival"]);
+    expect(waiting.leadership.missingPrompts).toEqual([]);
+    expect(waiting.leadership.fixes).toEqual([]);
+    expect(waiting.leadership.technicalChecks.map((check) => check.status)).toContain("waiting");
+
+    const prompt = project.prompts[0];
+    const partial = buildVisibilityWorkspaceReport(project, {
+      runs: [
+        {
+          runId: "partial-1",
+          promptId: prompt.id,
+          topicId: prompt.topicId,
+          surface: "chatgpt_search",
+          market: "US",
+          language: "en",
+          observation: {
+            runId: "partial-1",
+            answerObserved: true,
+            brandMentioned: false,
+            competitorMentions: ["Rival"],
+            recommendationStrength: "none",
+            rankedPosition: null,
+            citations: [],
+            confidence: "insufficient",
+            claimVerified: true,
+            signal: "Observed.",
+          },
+          citations: [
+            {
+              url: "https://www.rival.example/comparison",
+              canonicalUrl: "https://www.rival.example/comparison",
+              title: "Rival",
+              excerpt: null,
+              sourceType: "competitor",
+              resolved: true,
+              verificationStatus: "claim_supported",
+              supportsClaim: true,
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(partial.leadership.status).toBe("partial");
+    expect(partial.leadership.missingPrompts).toEqual([]);
+    expect(partial.leadership.fixes).toEqual([]);
+    expect(partial.leadership.citationShare.every((row) => row.share === null)).toBe(true);
+    expect(partial.leadership.citationNote).toContain("resolved so far");
+  });
+
+  it("reports citation share, missing prompts, the technical check, and ranked fixes", () => {
+    const project = createVisibilityProjectDraft(intake);
+    const prompt = project.prompts[0];
+    const citations = [
+      {
+        url: "https://example.com/proof",
+        canonicalUrl: "https://example.com/proof",
+        title: "Proof",
+        excerpt: "Example",
+        sourceType: "owned" as const,
+        resolved: true,
+        verificationStatus: "claim_supported" as const,
+        supportsClaim: true,
+      },
+      {
+        url: "https://www.rival.example/a",
+        canonicalUrl: "https://www.rival.example/a",
+        title: "Rival A",
+        excerpt: "Rival",
+        sourceType: "competitor" as const,
+        resolved: true,
+        verificationStatus: "claim_supported" as const,
+        supportsClaim: true,
+      },
+      {
+        url: "https://blog.rival.example/b",
+        canonicalUrl: "https://blog.rival.example/b",
+        title: "Rival B",
+        excerpt: "Rival",
+        sourceType: "competitor" as const,
+        resolved: true,
+        verificationStatus: "claim_supported" as const,
+        supportsClaim: true,
+      },
+      {
+        url: "https://press.example/story",
+        canonicalUrl: "https://press.example/story",
+        title: "Press",
+        excerpt: null,
+        sourceType: "earned" as const,
+        resolved: true,
+        verificationStatus: "citation_resolved" as const,
+        supportsClaim: false,
+      },
+    ];
+    const report = buildVisibilityWorkspaceReport(project, {
+      runs: [1, 2, 3].map((repetition) => ({
+        runId: `share-${repetition}`,
+        promptId: prompt.id,
+        topicId: prompt.topicId,
+        surface: "chatgpt_search" as const,
+        market: "US",
+        language: "en",
+        observation: {
+          runId: `share-${repetition}`,
+          answerObserved: true,
+          brandMentioned: false,
+          competitorMentions: ["Rival"],
+          recommendationStrength: "none" as const,
+          rankedPosition: null,
+          citations: [],
+          confidence: "high" as const,
+          claimVerified: false,
+          signal: "Observed.",
+        },
+        citations: repetition === 1 ? citations : [],
+      })),
+    });
+
+    const share = report.leadership.citationShare;
+    expect(share.map((row) => [row.name, row.share])).toEqual([
+      ["Example", 25],
+      ["Rival", 50],
+      ["Other cited sources", 25],
+    ]);
+    expect(share.reduce((sum, row) => sum + (row.share ?? 0), 0)).toBe(100);
+    expect(report.leadership.missingPrompts).toEqual([
+      expect.objectContaining({
+        promptId: prompt.id,
+        citedInstead: ["Rival"],
+        runs: 3,
+      }),
+    ]);
+    expect(report.leadership.fixes[0]).toMatchObject({
+      rank: 1,
+      why: expect.stringContaining("competitor source was cited"),
+    });
+    expect(report.leadership.fixes.length).toBeLessThanOrEqual(5);
+    expect(report.leadership.fixes.some((fix) => fix.title.startsWith("Replace citations"))).toBe(true);
+    expect(report.leadership.technicalChecks.find((check) => check.id === "owned-cited")?.status).toBe("pass");
+    expect(report.leadership.technicalChecks.find((check) => check.id === "claim-support")?.status).toBe("partial");
+    expect(report.leadership.headline).toContain("25% of resolved citations");
+    expect(report.leadership.headline).toContain("Missing from 1 of");
+  });
 });

@@ -49,7 +49,7 @@ export class OpenAiSearchAdapter implements VisibilitySurfaceAdapter {
     if (!apiKey) {
       throw new Error("Missing OPENAI_API_KEY for the OpenAI web-search adapter.");
     }
-    const model = process.env.OPENAI_VISIBILITY_MODEL?.trim();
+    const model = request.model?.trim() || process.env.OPENAI_VISIBILITY_MODEL?.trim();
     if (!model) {
       throw new Error("Missing OPENAI_VISIBILITY_MODEL for the controlled OpenAI web-search run.");
     }
@@ -60,31 +60,8 @@ export class OpenAiSearchAdapter implements VisibilitySurfaceAdapter {
         authorization: `Bearer ${apiKey}`,
         "content-type": "application/json",
       },
-      body: JSON.stringify({
-        model,
-        store: false,
-        max_output_tokens: openAiVisibilityMaxOutputTokens(),
-        ...(request.manifest.searchMode === "search_enabled"
-          ? {
-              tools: [
-                {
-                  type: "web_search",
-                  user_location: {
-                    type: "approximate",
-                    country: request.manifest.market,
-                  },
-                },
-              ],
-              // A search-enabled benchmark must actually search. The default `auto`
-              // mode can return a perfectly valid model-only answer that is not
-              // comparable with a search-enabled run.
-              tool_choice: "required",
-              include: ["web_search_call.action.sources"],
-            }
-          : {}),
-        input: request.prompt,
-      }),
-      signal: AbortSignal.timeout(openAiVisibilityTimeoutMs()),
+      body: JSON.stringify(openAiWebSearchBody(request, model)),
+      signal: AbortSignal.timeout(request.timeoutMs ?? openAiVisibilityTimeoutMs()),
       cache: "no-store",
     });
 
@@ -141,6 +118,38 @@ export function openAiVisibilityMaxOutputTokens(
   return Number.isFinite(tokens)
     ? Math.min(8_000, Math.max(256, Math.trunc(tokens)))
     : DEFAULT_OPENAI_VISIBILITY_MAX_OUTPUT_TOKENS;
+}
+
+function openAiWebSearchBody(request: SurfaceExecutionRequest, model: string) {
+  const market = request.manifest.market.trim();
+  return {
+    model,
+    store: false,
+    max_output_tokens: openAiVisibilityMaxOutputTokens(),
+    ...(request.manifest.searchMode === "search_enabled"
+      ? {
+          tools: [
+            {
+              type: "web_search",
+              ...(market
+                ? {
+                    user_location: {
+                      type: "approximate",
+                      country: market,
+                    },
+                  }
+                : {}),
+            },
+          ],
+          // A search-enabled benchmark must actually search. The default `auto`
+          // mode can return a perfectly valid model-only answer that is not
+          // comparable with a search-enabled run.
+          tool_choice: "required",
+          include: ["web_search_call.action.sources"],
+        }
+      : {}),
+    input: request.prompt,
+  };
 }
 
 function dedupeSources(sources: Array<{ url: string; title?: string }>) {

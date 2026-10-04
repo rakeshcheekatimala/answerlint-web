@@ -11,6 +11,10 @@ import {
 } from "react";
 
 import {
+  LeadershipReport,
+  ReportContract,
+} from "@/components/visibility/LeadershipReport";
+import {
   buildVisibilityWorkspaceReport,
   type VisibilityWorkspaceReport,
 } from "@/lib/visibility/reporting";
@@ -221,8 +225,8 @@ export function VisibilityWorkspaceClient({ initialProjectId }: Props) {
         }
         setNotice(
           payload.project.storageStatus === "stored"
-            ? "Workspace created. Confirm your entity baseline before any provider calls are made."
-            : "Workspace created for this browser session. Connect Supabase to retain durable evidence across devices.",
+            ? "Report created. Approve the brand and questions before any runs start."
+            : "Report created for this browser session. Connect Supabase to keep it across devices.",
         );
       } catch (createError) {
         setError(
@@ -468,54 +472,39 @@ function SetupScreen({
     <>
       <section className="overflow-hidden rounded-[1.5rem] border border-ink bg-ink px-5 py-8 text-paper shadow-[0_26px_70px_rgba(10,10,10,0.18)] sm:px-8 lg:px-10 lg:py-11">
         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-score-high">
-          <PulseIcon /> AI Visibility · controlled beta
+          <PulseIcon /> AI visibility report
         </div>
         <h1 className="mt-5 max-w-4xl font-display text-4xl font-semibold leading-[0.98] tracking-[-0.045em] text-white sm:text-6xl">
-          Know which buyer answers you can actually influence.
+          Why answers cite your competitors.
         </h1>
         <p className="mt-5 max-w-2xl text-base leading-7 text-white/70 sm:text-lg">
-          Approve the questions. Observe the answers. Act only when the cited
-          evidence survives verification.
+          One page: your citation share, the buyer prompts where you are
+          missing, a technical check, and five fixes. Each question is asked
+          again, because a single answer changes from run to run.
         </p>
-        <dl className="mt-9 grid border-t border-white/15 sm:grid-cols-3">
-          <HeroPrinciple
-            label="Instrument"
-            value="Recorded API runs"
-            body="Never presented as a consumer-product rank."
-          />
-          <HeroPrinciple
-            label="Proof"
-            value="Claim-level evidence"
-            body="Every decision opens to its answer and sources."
-          />
-          <HeroPrinciple
-            label="Guardrail"
-            value="28-call ceiling"
-            body="No unbounded discovery or silent provider calls."
-          />
-        </dl>
       </section>
+      <ReportContract />
 
       <section className={`${cardClass} mt-6 overflow-hidden`}>
         <div className="border-b border-border bg-paper-muted px-5 py-5 sm:px-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-ink-muted">
-                Create a controlled workspace
+                Start the report
               </p>
               <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight text-ink">
-                Define the entity before measuring it.
+                Name the brand and the competitors to compare.
               </h2>
             </div>
             <div className="rounded-xl border border-border bg-paper px-4 py-3 text-right">
               <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-                Draft scope
+                Planned runs
               </p>
               <p className="mt-1 font-mono text-lg font-semibold text-ink">
                 {plannedDraftRuns} runs
               </p>
               <p className="mt-0.5 text-xs text-ink-muted">
-                8 core prompts × {surfaces.length} surface × {repeats} repeats
+                {`Up to 8 questions, each asked ${repeats} time${repeats === 1 ? "" : "s"}`}
               </p>
             </div>
           </div>
@@ -570,8 +559,8 @@ function SetupScreen({
             </Field>
             <div className="lg:col-span-2">
               <Field
-                label="Buyer jobs to test"
-                hint="One high-value use case per line. These become the first prompt cohort."
+                label="Buyer questions"
+                hint="One job per line. These become the prompts the report scores."
                 error={
                   form.formState.errors.keyUseCases?.message as
                     | string
@@ -579,7 +568,7 @@ function SetupScreen({
                 }
               >
                 <textarea
-                  aria-label="Buyer jobs to test"
+                  aria-label="Buyer questions"
                   className={inputClass}
                   rows={3}
                   value={useCasesText}
@@ -592,37 +581,40 @@ function SetupScreen({
             </div>
             <div className="lg:col-span-2">
               <Field
-                label="Measurement surface"
-                hint="This closed beta measures one clearly labelled controlled surface; unconfigured products are not presented as data."
+                label="How the answers are collected"
+                hint="ChatGPT, Perplexity, and Gemini screenshots are left out. A picture of one answer changes on the next run and does not show citation share."
               >
-                <div className="mt-2 grid gap-3 md:grid-cols-2">
-                  {VISIBILITY_SURFACE_DEFINITIONS.map((surface) => {
-                    const selected = surfaces.includes(surface.surface);
-                    return (
-                      <button
-                        key={surface.surface}
-                        type="button"
-                        onClick={() => onToggleSurface(surface.surface)}
-                        className={`group relative min-h-28 rounded-xl border p-4 text-left transition ${selected ? "border-ink bg-ink text-white" : "border-border bg-paper hover:border-ink"}`}
-                        aria-pressed={selected}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <span className="font-semibold">{surface.label}</span>
-                          <span
-                            className={`rounded-full border px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${selected ? "border-white/20 text-score-high" : "border-border-strong text-ink-muted"}`}
-                          >
-                            Controlled beta
-                          </span>
-                        </div>
-                        <p
-                          className={`mt-2 text-xs leading-5 ${selected ? "text-white/65" : "text-ink-muted"}`}
+                {VISIBILITY_SURFACE_DEFINITIONS.filter(
+                  (surface) => surface.availability === "available",
+                ).length > 1 ? (
+                  <div className="mt-2 grid gap-3 md:grid-cols-2">
+                    {VISIBILITY_SURFACE_DEFINITIONS.map((surface) => {
+                      const selected = surfaces.includes(surface.surface);
+                      return (
+                        <button
+                          key={surface.surface}
+                          type="button"
+                          onClick={() => onToggleSurface(surface.surface)}
+                          className={`group relative min-h-28 rounded-xl border p-4 text-left transition ${selected ? "border-ink bg-ink text-white" : "border-border bg-paper hover:border-ink"}`}
+                          aria-pressed={selected}
                         >
-                          {surface.description}
-                        </p>
-                      </button>
-                    );
-                  })}
-                </div>
+                          <div className="flex items-start justify-between gap-3">
+                            <span className="font-semibold">{surface.label}</span>
+                          </div>
+                          <p
+                            className={`mt-2 text-xs leading-5 ${selected ? "text-white/65" : "text-ink-muted"}`}
+                          >
+                            {surface.description}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="mt-2 rounded-xl border border-border bg-paper px-4 py-3 text-sm leading-6 text-ink">
+                    {`Repeated OpenAI web-search runs. The same questions are asked ${repeats} time${repeats === 1 ? "" : "s"}, and only sources that resolve are counted.`}
+                  </p>
+                )}
               </Field>
             </div>
             <div>
@@ -642,27 +634,33 @@ function SetupScreen({
               </div>
             </div>
             <Field
-              label="Run policy"
-              hint="Repeated fresh API runs show stability. Scheduling is intentionally configured after the first benchmark."
+              label="Repeats"
+              hint="Each question is asked this many times. Three is the default, because one answer changes."
             >
               <div className="mt-2 grid grid-cols-2 gap-3">
                 <label className="rounded-xl border border-border bg-paper p-3 text-xs font-semibold text-ink">
-                  Samples
+                  Times per question
                   <select
+                    aria-label="Times per question"
                     className="mt-2 w-full bg-transparent text-sm font-semibold outline-none"
-                    {...form.register("runtimePolicy.repeatRuns", {
-                      valueAsNumber: true,
-                    })}
+                    value={repeats}
+                    onChange={(event) =>
+                      form.setValue(
+                        "runtimePolicy.repeatRuns",
+                        Number(event.target.value),
+                        { shouldValidate: true },
+                      )
+                    }
                   >
-                    <option value={1}>1 exploratory</option>
-                    <option value={3}>3 evidence-grade</option>
-                    <option value={5}>5 high variance</option>
+                    <option value={1}>1</option>
+                    <option value={3}>3</option>
+                    <option value={5}>5</option>
                   </select>
                 </label>
                 <div className="rounded-xl border border-border bg-paper p-3 text-xs font-semibold text-ink">
-                  Search
+                  Sources
                   <p className="mt-2 text-sm font-semibold">
-                    Required for this controlled run
+                    Web search stays on, so answers can cite pages.
                   </p>
                 </div>
               </div>
@@ -671,14 +669,11 @@ function SetupScreen({
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold text-ink">
-                    Confirmed competitors{" "}
-                    <span className="font-normal text-ink-muted">
-                      (optional)
-                    </span>
+                    Competitors to compare
                   </p>
                   <p className="mt-1 text-xs leading-5 text-ink-muted">
-                    Comparisons use only entities you confirm; no algorithmic
-                    rival is silently added.
+                    Citation share is split across these names. Add a site so
+                    their citations can be matched. Nothing is added for you.
                   </p>
                 </div>
                 <button
@@ -723,19 +718,14 @@ function SetupScreen({
           </div>
           <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-5">
             <p className="max-w-xl text-sm leading-6 text-ink-muted">
-              You review the entity and prompt cohort before AnswerLint makes a
-              durable provider call. The baseline uses{" "}
-              {DEFAULT_VISIBILITY_BASELINE_RUNS} runs and can grow only to{" "}
-              {MAX_VISIBILITY_RUNS_PER_BENCHMARK} approved runs.
+              {`You approve the questions before anything is sent. The first report uses ${DEFAULT_VISIBILITY_BASELINE_RUNS} runs and stops at ${MAX_VISIBILITY_RUNS_PER_BENCHMARK}.`}
             </p>
             <button
               type="submit"
               disabled={isSubmitting}
               className="inline-flex items-center gap-2 rounded-xl bg-ink px-5 py-3 text-sm font-semibold text-white transition hover:bg-ink-muted disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isSubmitting
-                ? "Creating workspace…"
-                : "Create evidence workspace"}
+              {isSubmitting ? "Creating report…" : "Create the report"}
               <ArrowIcon />
             </button>
           </div>
@@ -783,10 +773,9 @@ function Workspace({
     <>
       <section className="overflow-hidden rounded-[1.5rem] border border-ink bg-ink text-white shadow-[0_24px_65px_rgba(10,10,10,0.18)]">
         <div className="border-b border-white/10 px-5 py-3 text-xs text-white/55 sm:px-7">
-          <span className="font-mono text-score-high">CONTROLLED RUN</span>
-          <span className="mx-2 text-white/20">/</span>OpenAI web-search
-          evidence is labelled as a reproducible API run, not a consumer search
-          rank.
+          <span className="font-mono text-score-high">REPEATED RUNS</span>
+          <span className="mx-2 text-white/20">/</span>
+          Same questions, asked more than once. Citation share uses sources that resolve.
         </div>
         <div className="flex flex-col gap-5 px-5 py-6 sm:px-7 lg:flex-row lg:items-end lg:justify-between">
           <div>
@@ -798,10 +787,10 @@ function Workspace({
             </div>
             <h1 className="mt-3 font-display text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
               {project.intake.brandName}{" "}
-              <span className="text-white/45">Evidence Loop</span>
+              <span className="text-white/45">visibility report</span>
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-white/65">
-              {report.executiveBrief}
+              {report.leadership.headline}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -810,7 +799,7 @@ function Workspace({
               onClick={onReset}
               className="rounded-lg border border-white/20 px-3.5 py-2.5 text-xs font-bold text-white/80 hover:bg-white/10"
             >
-              New workspace
+              New report
             </button>
             <button
               type="button"
@@ -841,11 +830,7 @@ function Workspace({
         />
         <div className="p-5 sm:p-7">
           {activeView === "overview" ? (
-            <OverviewPanel
-              project={project}
-              report={report}
-              onViewChange={onViewChange}
-            />
+            <OverviewPanel report={report} onViewChange={onViewChange} />
           ) : null}
           {activeView === "portfolio" ? (
             <PortfolioPanel
@@ -1001,7 +986,7 @@ function WorkspaceNav({
   report: VisibilityWorkspaceReport;
 }) {
   const tabs: Array<{ id: WorkspaceView; label: string; count?: number }> = [
-    { id: "overview", label: "Overview" },
+    { id: "overview", label: "Report" },
     { id: "portfolio", label: "Portfolio" },
     {
       id: "evidence",
@@ -1044,209 +1029,53 @@ function WorkspaceNav({
 }
 
 function OverviewPanel({
-  project,
   report,
   onViewChange,
 }: {
-  project: VisibilityProject;
   report: VisibilityWorkspaceReport;
   onViewChange: (view: WorkspaceView) => void;
 }) {
-  const metrics = report.metrics;
   const analysis = report.crewAnalysis;
   return (
-    <div className="space-y-7">
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        <MetricCard
-          label="Measurement coverage"
-          value={
-            report.measurementCoverage.percentage === null
-              ? "—"
-              : `${report.measurementCoverage.percentage}%`
-          }
-          detail={`${report.measurementCoverage.completedRuns} completed / ${report.measurementCoverage.plannedRuns} planned`}
-          tone="dark"
-        />
-        {metrics.map((metric) => (
-          <MetricCard
-            key={metric.label}
-            label={metric.label}
-            value={metric.value === null ? "—" : `${metric.value}%`}
-            detail={metric.reason}
-          />
-        ))}
+    <div className="space-y-8">
+      <LeadershipReport page={report.leadership} />
+      <div className="flex flex-wrap gap-2 border-t border-border pt-5">
+        <button
+          type="button"
+          onClick={() => onViewChange("actions")}
+          className="rounded-lg bg-ink px-3.5 py-2.5 text-xs font-bold text-white"
+        >
+          Open the full fix list
+        </button>
+        <button
+          type="button"
+          onClick={() => onViewChange("evidence")}
+          className="rounded-lg border border-border-strong px-3.5 py-2.5 text-xs font-bold text-ink"
+        >
+          Inspect answers
+        </button>
       </div>
-      <div className="grid gap-5 lg:grid-cols-[1.25fr_0.75fr]">
-        <article className="rounded-2xl border border-border bg-paper p-5 sm:p-6">
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-ink-muted">
-            Executive decision
-          </p>
-          <h2 className="mt-3 font-display text-2xl font-semibold tracking-tight text-ink">
-            {analysis?.executiveHeadline ??
-              (project.state === "completed"
-                ? "Use the evidence, then ship the smallest credible change."
-                : "Build the measurement instrument before looking for a result.")}
-          </h2>
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-ink-muted">
-            {analysis?.executiveSummary ?? report.actionQueueMessage}
-          </p>
-          {analysis?.primaryRisk ? (
-            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-              <span className="font-bold">Primary risk: </span>
-              {analysis.primaryRisk}
-            </div>
-          ) : null}
-          <div className="mt-5 flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => onViewChange("actions")}
-              className="rounded-lg bg-ink px-3.5 py-2.5 text-xs font-bold text-white"
-            >
-              Open action queue
-            </button>
-            <button
-              type="button"
-              onClick={() => onViewChange("evidence")}
-              className="rounded-lg border border-border-strong px-3.5 py-2.5 text-xs font-bold text-ink"
-            >
-              Inspect evidence
-            </button>
-          </div>
-        </article>
-        <article className="rounded-2xl border border-border bg-paper-muted p-5">
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-ink-muted">
-            Brand voice fidelity
-          </p>
-          <div className="mt-4 space-y-3">
-            {analysis?.brandVoice.length ? (
-              analysis.brandVoice.map((finding) => (
-                <Lane
-                  key={finding.dimension}
-                  name={finding.dimension}
-                  state={finding.status.replace("_", " ")}
-                  body={finding.observed}
-                />
-              ))
-            ) : (
-              <>
-                <Lane
-                  name="Accuracy"
-                  state="Pending"
-                  body="Observed claims are compared only after answer evidence exists."
-                />
-                <Lane
-                  name="Citation support"
-                  state="Pending"
-                  body="Resolved URLs and supported claims remain separate gates."
-                />
-              </>
-            )}
-          </div>
-        </article>
-      </div>
-      {analysis?.executiveDecisions.length ? (
-        <section className="overflow-hidden rounded-xl border border-border bg-paper">
-          <div className="border-b border-border px-4 py-3">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-ink-muted">
-              Leadership brief
-            </p>
-          </div>
-          <div>
-            {analysis.executiveDecisions.map((decision) => (
-              <div
-                key={decision.audience}
-                className="grid gap-2 border-b border-border px-4 py-4 last:border-0 md:grid-cols-[6rem_1.2fr_1fr] md:gap-5"
-              >
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-wide text-ink">
-                    {decision.audience}
-                  </p>
-                  <p className="mt-1 text-[10px] uppercase tracking-wide text-ink-muted">
-                    {decision.confidence} confidence
-                  </p>
-                </div>
-                <p className="text-sm font-semibold leading-6 text-ink">{decision.decision}</p>
-                <div className="text-xs leading-5 text-ink-muted">
-                  <p><span className="font-bold text-ink">Value: </span>{decision.valueCase}</p>
-                  <p className="mt-1"><span className="font-bold text-ink">If ignored: </span>{decision.riskIfIgnored}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      ) : null}
-      {analysis?.customerPainThemes.length ? (
-        <section className="border-l-2 border-ink pl-4">
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-ink-muted">Customer pain digest</p>
-          <div className="mt-3 divide-y divide-border">
-            {analysis.customerPainThemes.map((theme) => (
-              <div
-                key={`${theme.evidenceType}-${theme.pain}`}
-                className="grid gap-2 py-3 first:pt-0 last:pb-0 md:grid-cols-[7rem_1fr]"
-              >
-                <p className="text-[10px] font-bold uppercase tracking-wide text-ink-muted">{theme.evidenceType}</p>
-                <div><h3 className="text-sm font-semibold leading-6 text-ink">{theme.pain}</h3><p className="mt-1 text-xs leading-5 text-ink-muted">{theme.implication}</p></div>
-              </div>
-            ))}
-          </div>
-        </section>
-      ) : null}
-      {analysis?.findings.length ? (
+      {analysis ? (
         <details className="rounded-xl border border-border bg-paper px-4 py-3">
           <summary className="cursor-pointer text-xs font-bold text-ink">
-            Inspect the evidence used to reach this decision
+            How this reading was produced
           </summary>
-          <div className="mt-3 divide-y divide-border">
-            {analysis.findings.map((finding) => (
-              <div
-                key={`${finding.promptId}-${finding.finding}`}
-                className="grid gap-2 py-3 first:pt-0 md:grid-cols-[1fr_1.5fr]"
-              >
-                <div><p className="text-sm font-semibold text-ink">{finding.buyerJob}</p><p className="mt-1 text-[10px] uppercase tracking-wide text-ink-muted">{finding.stakes} stakes · {finding.evidenceRunIds.length} evidence refs</p></div>
-                <div><p className="text-xs leading-6 text-ink-muted">{finding.finding}</p>{finding.uncertainty ? <p className="mt-1 text-xs italic text-ink-muted">Uncertainty: {finding.uncertainty}</p> : null}</div>
-              </div>
+          <div className="mt-4 space-y-4">
+            <div>
+              <p className="text-sm font-semibold text-ink">{analysis.executiveHeadline}</p>
+              <p className="mt-2 text-sm leading-6 text-ink-muted">{analysis.executiveSummary}</p>
+            </div>
+            {analysis.brandVoice.map((finding) => (
+              <Lane
+                key={finding.dimension}
+                name={finding.dimension}
+                state={finding.status.replace("_", " ")}
+                body={finding.observed}
+              />
             ))}
           </div>
         </details>
       ) : null}
-      {!analysis ? <section>
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-ink-muted">
-              Approved opportunity map
-            </p>
-            <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight text-ink">
-              Where buyer intent meets evidence.
-            </h2>
-          </div>
-          <button
-            type="button"
-            onClick={() => onViewChange("portfolio")}
-            className="text-xs font-bold text-ink underline underline-offset-4"
-          >
-            Open portfolio
-          </button>
-        </div>
-        <div className="mt-4 grid gap-3 lg:grid-cols-3">
-          {report.topicRows.map((topic) => (
-            <article
-              key={topic.topic}
-              className="rounded-xl border border-border bg-paper p-4"
-            >
-              <p className="text-xs font-mono uppercase tracking-wide text-ink-muted">
-                {topic.intent}
-              </p>
-              <h3 className="mt-2 font-semibold text-ink">{topic.topic}</h3>
-              <p className="mt-3 text-xs leading-5 text-ink-muted">
-                {topic.evidence}
-              </p>
-              <p className="mt-3 border-t border-border pt-3 text-xs font-semibold leading-5 text-ink">
-                {topic.nextAction}
-              </p>
-            </article>
-          ))}
-        </div>
-      </section> : null}
     </div>
   );
 }
@@ -1986,39 +1815,6 @@ function EmptyPanel({
     </article>
   );
 }
-function MetricCard({
-  label,
-  value,
-  detail,
-  tone,
-}: {
-  label: string;
-  value: string;
-  detail: string;
-  tone?: "dark";
-}) {
-  return (
-    <article
-      className={`min-h-40 rounded-xl border p-4 ${tone === "dark" ? "border-ink bg-ink text-white" : "border-border bg-paper"}`}
-    >
-      <p
-        className={`text-xs font-bold leading-5 ${tone === "dark" ? "text-white/65" : "text-ink-muted"}`}
-      >
-        {label}
-      </p>
-      <p
-        className={`mt-4 font-mono text-3xl font-semibold tracking-tight ${tone === "dark" ? "text-score-high" : "text-ink"}`}
-      >
-        {value}
-      </p>
-      <p
-        className={`mt-3 text-[11px] leading-5 ${tone === "dark" ? "text-white/60" : "text-ink-muted"}`}
-      >
-        {detail}
-      </p>
-    </article>
-  );
-}
 function Lane({
   name,
   state,
@@ -2131,38 +1927,17 @@ function Feedback({
     </div>
   );
 }
-function HeroPrinciple({
-  label,
-  value,
-  body,
-}: {
-  label: string;
-  value: string;
-  body: string;
-}) {
-  return (
-    <div className="border-b border-white/15 py-4 last:border-b-0 sm:border-b-0 sm:border-r sm:px-5 sm:first:pl-0 sm:last:border-r-0">
-      <dt className="text-[10px] font-bold uppercase tracking-[0.13em] text-white/45">
-        {label}
-      </dt>
-      <dd className="mt-1 font-mono text-base font-semibold text-score-high">
-        {value}
-      </dd>
-      <p className="mt-1 text-xs leading-5 text-white/60">{body}</p>
-    </div>
-  );
-}
 function benchmarkCta(project: VisibilityProject, canRun: boolean) {
-  if (canRun) return "Run controlled benchmark";
-  if (project.state === "awaiting_brand_approval") return "Approve entity first";
-  if (project.state === "awaiting_topic_approval") return "Lock cohort first";
-  if (project.state === "benchmark_queued") return "Benchmark queued";
-  if (project.state === "benchmarking") return "Benchmark running";
-  if (project.state === "completed") return "Evidence ready";
-  if (project.state === "failed") return "Review failed run";
+  if (canRun) return "Run the report";
+  if (project.state === "awaiting_brand_approval") return "Approve the brand first";
+  if (project.state === "awaiting_topic_approval") return "Approve the questions first";
+  if (project.state === "benchmark_queued") return "Report queued";
+  if (project.state === "benchmarking") return "Report running";
+  if (project.state === "completed") return "Report ready";
+  if (project.state === "failed") return "Review the failed run";
   return project.storageStatus !== "stored"
     ? "Connect storage to run"
-    : "Complete approval gates";
+    : "Finish approval first";
 }
 function sourceLabel(url: string) {
   try {

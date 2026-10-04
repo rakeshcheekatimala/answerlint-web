@@ -3,17 +3,12 @@ import { notFound } from "next/navigation";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { StructuredData } from "@/components/StructuredData";
-import { VisibilityWorkspaceClient } from "@/components/visibility/VisibilityWorkspaceClient";
+import { SiteAuditClient } from "@/components/visibility/SiteAuditClient";
 import { SITE_URL } from "@/config/site-url";
 import { isVisibilityEnabled } from "@/lib/visibility/feature-flag";
 
-export default async function AiVisibilityPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ projectId?: string }>;
-}) {
+export default async function AiVisibilityPage() {
   if (!isVisibilityEnabled()) notFound();
-  const { projectId } = await searchParams;
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
@@ -22,7 +17,7 @@ export default async function AiVisibilityPage({
     operatingSystem: "Web",
     url: `${SITE_URL}/tools/ai-visibility`,
     description:
-      "Plan and verify controlled OpenAI web-search answer evidence with approvals, recorded run policy, citations, and defensible actions.",
+      "A one-page report: citation share versus competitors, buyer questions the brand is missing, a technical check of the public page, and up to five fixes.",
   };
 
   return (
@@ -30,7 +25,7 @@ export default async function AiVisibilityPage({
       <StructuredData data={structuredData} />
       <SiteHeader />
       <div className="min-h-screen bg-gradient-to-b from-wash via-paper to-paper-muted">
-        <VisibilityWorkspaceClient initialProjectId={projectId} />
+        <SiteAuditClient />
       </div>
       <SiteFooter />
     </>
